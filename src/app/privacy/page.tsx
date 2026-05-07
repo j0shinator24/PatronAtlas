@@ -12,11 +12,13 @@ export const metadata: Metadata = {
     title: "Privacy | PatronAtlas",
     description: "PatronAtlas privacy policy. What we collect, why, and how to access or correct your record.",
     url: `${BASE_URL}/privacy`,
+    images: [{ url: `${BASE_URL}/og/privacy`, width: 1200, height: 630, alt: "PatronAtlas privacy policy" }],
   },
   twitter: {
-    card: "summary",
+    card: "summary_large_image",
     title: "Privacy | PatronAtlas",
     description: "PatronAtlas privacy policy. What we collect, why, and how to access or correct your record.",
+    images: [`${BASE_URL}/og/privacy`],
   },
 }
 

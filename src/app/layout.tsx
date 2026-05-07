@@ -38,15 +38,21 @@ export const metadata: Metadata = {
     title: "PatronAtlas | An atlas of Australia's philanthropic funders",
     description: BUSINESS.description,
     url: BASE_URL,
+    images: [{ url: `${BASE_URL}/og/home`, width: 1200, height: 630, alt: "PatronAtlas — an atlas of Australia's philanthropic funders" }],
   },
   twitter: {
-    card: "summary",
+    card: "summary_large_image",
     title: "PatronAtlas | An atlas of Australia's philanthropic funders",
     description: BUSINESS.description,
+    images: [`${BASE_URL}/og/home`],
   },
   robots: {
     index: true,
     follow: true,
+  },
+  verification: {
+    google: "AMeEi4XkKK4jb78Pz5-GHo2SnDaUkloZcgC4TBGV6d4",
+    other: { "msvalidate.01": "6F22E65E02440CD6F4B9F375D6B0E1E3" },
   },
 }
 

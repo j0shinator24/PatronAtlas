@@ -1,9 +1,10 @@
 import type { Metadata } from "next"
 import Link from "next/link"
-import { ArrowLeft, Sparkles, FileSearch, ShieldCheck, AlertTriangle, CheckCircle2 } from "lucide-react"
+import { ArrowLeft, Sparkles, FileSearch, ShieldCheck, AlertTriangle, CheckCircle2, HelpCircle } from "lucide-react"
 import { Badge } from "@/components/ui/badge"
 import { ToolQueryForm } from "@/components/tool-query-form"
 import { BASE_URL, PRODUCT } from "@/lib/constants"
+import { toolFaqItems } from "@/lib/faqs/tool"
 
 export const metadata: Metadata = {
   title: "Find PAFs that fit your cause",
@@ -18,11 +19,13 @@ export const metadata: Metadata = {
     description:
       "Submit your charity description to be matched against AU PAFs and PuAFs the moment Pro launches mid-2026.",
     url: `${BASE_URL}/tool`,
+    images: [{ url: `${BASE_URL}/og/tool`, width: 1200, height: 630, alt: "PatronAtlas — find PAFs that fit your cause" }],
   },
   twitter: {
     card: "summary_large_image",
     title: "Find PAFs that fit your cause | PatronAtlas",
     description: "Submit your charity description for AU PAF matching when Pro launches.",
+    images: [`${BASE_URL}/og/tool`],
   },
 }
 
@@ -53,6 +56,16 @@ const breadcrumbJsonLd = {
   ],
 }
 
+const faqJsonLd = {
+  "@context": "https://schema.org",
+  "@type": "FAQPage",
+  mainEntity: toolFaqItems.map((item) => ({
+    "@type": "Question",
+    name: item.q,
+    acceptedAnswer: { "@type": "Answer", text: item.a },
+  })),
+}
+
 export default async function ToolPage({
   searchParams,
 }: {
@@ -69,6 +82,10 @@ export default async function ToolPage({
       <script
         type="application/ld+json"
         dangerouslySetInnerHTML={{ __html: JSON.stringify(breadcrumbJsonLd) }}
+      />
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(faqJsonLd) }}
       />
 
       {/* Hero */}
@@ -204,6 +221,39 @@ export default async function ToolPage({
               ATO DGR list). Nothing scraped from competitor databases. Every claim cites
               its public source.
             </p>
+          </div>
+        </div>
+      </section>
+
+      {/* FAQ */}
+      <section id="faq" className="border-t border-border bg-muted/20 py-16 md:py-20 scroll-mt-20">
+        <div className="mx-auto max-w-4xl px-4 md:px-8">
+          <div className="mb-10">
+            <Badge variant="secondary" className="mb-4">Common questions</Badge>
+            <h2 className="text-2xl md:text-3xl font-bold tracking-tight">
+              Common questions about the tool
+            </h2>
+          </div>
+          <div className="space-y-4">
+            {toolFaqItems.map((item) => (
+              <details
+                key={item.q}
+                className="group rounded-xl border border-border bg-card p-5 open:border-primary/40 open:bg-primary/5 transition-colors"
+              >
+                <summary className="flex items-start gap-3 cursor-pointer list-none font-semibold text-base">
+                  <HelpCircle className="h-5 w-5 text-primary shrink-0 mt-0.5" />
+                  <span className="flex-1">{item.q}</span>
+                  <span className="text-muted-foreground group-open:rotate-180 transition-transform shrink-0 mt-0.5" aria-hidden="true">
+                    <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
+                      <path d="M4 6l4 4 4-4" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+                    </svg>
+                  </span>
+                </summary>
+                <p className="mt-3 ml-8 text-sm text-muted-foreground leading-relaxed">
+                  {item.a}
+                </p>
+              </details>
+            ))}
           </div>
         </div>
       </section>

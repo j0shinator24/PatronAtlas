@@ -12,11 +12,13 @@ export const metadata: Metadata = {
     title: "Terms | PatronAtlas",
     description: "PatronAtlas terms of use, licence, refund, and compliance posture.",
     url: `${BASE_URL}/terms`,
+    images: [{ url: `${BASE_URL}/og/terms`, width: 1200, height: 630, alt: "PatronAtlas terms of use" }],
   },
   twitter: {
-    card: "summary",
+    card: "summary_large_image",
     title: "Terms | PatronAtlas",
     description: "PatronAtlas terms of use, licence, refund, and compliance posture.",
+    images: [`${BASE_URL}/og/terms`],
   },
 }
 

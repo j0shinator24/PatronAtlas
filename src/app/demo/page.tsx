@@ -26,12 +26,14 @@ export const metadata: Metadata = {
     description:
       "Three example matched funders for an after-school literacy program. Fit reasoning, ACNC citations, draft outreach emails.",
     url: `${BASE_URL}/demo`,
+    images: [{ url: `${BASE_URL}/og/demo`, width: 1200, height: 630, alt: "PatronAtlas demo — three matched funders for a Logan literacy charity" }],
   },
   twitter: {
     card: "summary_large_image",
     title: "PatronAtlas demo output",
     description:
       "Three example matched funders for an after-school literacy program.",
+    images: [`${BASE_URL}/og/demo`],
   },
   robots: { index: true, follow: true },
 }
