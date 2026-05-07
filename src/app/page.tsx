@@ -82,7 +82,14 @@ const sourceCards = [
   },
 ]
 
-export default function HomePage() {
+export default async function HomePage({
+  searchParams,
+}: {
+  searchParams: Promise<Record<string, string | string[] | undefined>>
+}) {
+  const params = await searchParams
+  const waitlistError = typeof params["waitlist-error"] === "string" ? params["waitlist-error"] : undefined
+
   return (
     <>
       <script
@@ -134,16 +141,16 @@ export default function HomePage() {
         <div className="mx-auto max-w-6xl px-4 md:px-8">
           <div className="grid grid-cols-1 sm:grid-cols-3 gap-8 text-center">
             <div>
-              <p className="text-3xl font-mono font-bold text-foreground">$11B</p>
-              <p className="text-sm text-muted-foreground mt-1">Held in Australian PAFs and PuAFs combined</p>
+              <p className="text-3xl font-mono font-bold text-foreground">$10.7B</p>
+              <p className="text-sm text-muted-foreground mt-1">Held in Australian Private Ancillary Funds (ATO 2022-23)</p>
             </div>
             <div>
-              <p className="text-3xl font-mono font-bold text-foreground">~50%</p>
-              <p className="text-sm text-muted-foreground mt-1">Of PAFs don&apos;t appear on the ACNC register</p>
+              <p className="text-3xl font-mono font-bold text-foreground">2,196</p>
+              <p className="text-sm text-muted-foreground mt-1">Private Ancillary Funds in Australia (ATO 2022-23)</p>
             </div>
             <div>
               <p className="text-3xl font-mono font-bold text-foreground">{PRODUCT.fundCount}</p>
-              <p className="text-sm text-muted-foreground mt-1">PAFs and PuAFs publicly visible right now</p>
+              <p className="text-sm text-muted-foreground mt-1">Profiled in PatronAtlas from ACNC public registers</p>
             </div>
           </div>
         </div>
@@ -167,7 +174,7 @@ export default function HomePage() {
               money for. Claude reads the live ACNC charity register, finds the ancillary
               funds that have given to similar work, and ranks them by overlap. You get the
               fund name, a short fit reasoning, links to the public source documents, and a
-              draft outreach email. No login for the first three queries each month.
+              draft outreach email.
             </p>
           </div>
 
@@ -410,7 +417,7 @@ export default function HomePage() {
             </p>
           </div>
           <div className="rounded-2xl border border-border bg-card/80 backdrop-blur p-6 md:p-8">
-            <SampleForm />
+            <SampleForm errorMessage={waitlistError} />
           </div>
         </div>
       </section>

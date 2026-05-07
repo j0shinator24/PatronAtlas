@@ -44,7 +44,13 @@ const webAppSchema = {
   },
 }
 
-export default function ToolPage() {
+export default async function ToolPage({
+  searchParams,
+}: {
+  searchParams: Promise<Record<string, string | string[] | undefined>>
+}) {
+  const params = await searchParams
+  const toolError = typeof params["tool-error"] === "string" ? params["tool-error"] : undefined
   return (
     <>
       <script
@@ -92,7 +98,7 @@ export default function ToolPage() {
             </p>
           </div>
           <div className="rounded-2xl border border-border bg-card/80 p-6 md:p-8">
-            <ToolQueryForm />
+            <ToolQueryForm errorMessage={toolError} />
           </div>
         </div>
       </section>
@@ -171,7 +177,7 @@ export default function ToolPage() {
                 What it isn&apos;t
               </h3>
               <ul className="space-y-3 text-sm text-muted-foreground leading-relaxed">
-                <li>It isn&apos;t PafGUIDE. PafGUIDE has every fund, including the half that don&apos;t show on ACNC. PatronAtlas has the public half. About 1,500 funds.</li>
+                <li>It isn&apos;t PafGUIDE. PafGUIDE covers all 2,196 PAFs in Australia (ATO 2022-23), including those that don&apos;t publish on the ACNC register. PatronAtlas reads the ~1,500 funds visible on public ACNC data.</li>
                 <li>It isn&apos;t a guarantee. The AI gets it wrong sometimes, especially when funds publish nothing about their giving. Every recommendation has a source link so you can sanity-check before you send.</li>
                 <li>It isn&apos;t an introduction service. We don&apos;t broker. We don&apos;t take referral fees. We don&apos;t tell funds you exist. You contact them directly using public contact details.</li>
               </ul>

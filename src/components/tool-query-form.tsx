@@ -1,14 +1,12 @@
-"use client"
-
-import { useActionState } from "react"
 import { ArrowRight } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Textarea } from "@/components/ui/textarea"
-import { submitToolQuery, type ToolQueryState } from "@/app/actions/tool-query"
 
-const initialState: ToolQueryState = { ok: false }
+// Plain HTML form. Posts to /api/tool-query as a 303 redirect endpoint.
+// Designed to work in JS-restricted in-app WebViews (LinkedIn, Telegram, etc).
+// JS is NOT required for the form to submit and persist to Supabase.
 
 const regionOptions = [
   { value: "australia-wide", label: "Australia-wide" },
@@ -31,17 +29,16 @@ const askOptions = [
   { value: "over-500k", label: "Over $500,000" },
 ] as const
 
-export function ToolQueryForm() {
-  const [state, formAction, isPending] = useActionState(submitToolQuery, initialState)
-
+export function ToolQueryForm({ errorMessage }: { errorMessage?: string }) {
   return (
-    <form action={formAction} className="space-y-5">
+    <form action="/api/tool-query" method="post" id="tool-form" className="space-y-5">
       <div className="space-y-1.5">
         <Label htmlFor="tq-charity">Charity name</Label>
         <Input
           id="tq-charity"
           name="charity"
           required
+          aria-required="true"
           placeholder="Your DGR1 organisation"
           autoComplete="organization"
           className="h-11"
@@ -55,6 +52,7 @@ export function ToolQueryForm() {
           name="email"
           type="email"
           required
+          aria-required="true"
           placeholder="you@yourcharity.org.au"
           autoComplete="email"
           className="h-11"
@@ -70,6 +68,7 @@ export function ToolQueryForm() {
           id="tq-description"
           name="description"
           required
+          aria-required="true"
           placeholder="We run after-school literacy programs for primary-school kids in Logan, QLD. Last year we ran 1,400 contact hours with 95 students. We're DGR1 endorsed."
           rows={5}
           className="min-h-32"
@@ -86,6 +85,7 @@ export function ToolQueryForm() {
             id="tq-region"
             name="region"
             required
+            aria-required="true"
             defaultValue="australia-wide"
             className="flex h-11 w-full rounded-md border border-input bg-transparent px-3 py-1 text-sm shadow-sm focus:outline-none focus:ring-2 focus:ring-ring"
           >
@@ -100,6 +100,7 @@ export function ToolQueryForm() {
             id="tq-ask"
             name="ask"
             required
+            aria-required="true"
             defaultValue="5k-25k"
             className="flex h-11 w-full rounded-md border border-input bg-transparent px-3 py-1 text-sm shadow-sm focus:outline-none focus:ring-2 focus:ring-ring"
           >
@@ -126,15 +127,15 @@ export function ToolQueryForm() {
 
       <input type="text" name="honeypot" autoComplete="off" tabIndex={-1} aria-hidden="true" className="hidden" />
 
-      {state.error ? (
-        <p role="alert" className="text-sm text-destructive">
-          {state.error}
+      {errorMessage ? (
+        <p role="alert" aria-live="assertive" className="text-sm text-destructive">
+          {errorMessage}
         </p>
       ) : null}
 
-      <Button type="submit" size="lg" className="w-full sm:w-auto px-8 h-12 text-base" disabled={isPending}>
-        {isPending ? "Sending..." : "Submit my description"}
-        {!isPending && <ArrowRight className="ml-2 h-4 w-4" />}
+      <Button type="submit" size="lg" className="w-full sm:w-auto px-8 h-12 text-base">
+        Submit my description
+        <ArrowRight className="ml-2 h-4 w-4" />
       </Button>
 
       <p className="text-xs text-muted-foreground leading-relaxed">
