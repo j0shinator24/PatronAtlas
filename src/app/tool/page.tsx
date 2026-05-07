@@ -8,7 +8,7 @@ import { BASE_URL, PRODUCT } from "@/lib/constants"
 export const metadata: Metadata = {
   title: "Find PAFs that fit your cause",
   description:
-    "Submit your charity description and PatronAtlas will email you matched Australian Private and Public Ancillary Funds the moment Pro ships mid-2026, with reasoning cited to public ACNC, ABR and ASIC data.",
+    "Submit your charity description. PatronAtlas emails matched Australian PAFs and PuAFs the moment Pro ships mid-2026, with reasoning cited to ACNC, ABR and ASIC.",
   alternates: { canonical: `${BASE_URL}/tool` },
   openGraph: {
     type: "website",
@@ -44,6 +44,15 @@ const webAppSchema = {
   },
 }
 
+const breadcrumbJsonLd = {
+  "@context": "https://schema.org",
+  "@type": "BreadcrumbList",
+  itemListElement: [
+    { "@type": "ListItem", position: 1, name: "PatronAtlas", item: BASE_URL },
+    { "@type": "ListItem", position: 2, name: "Find PAFs that fit your cause", item: `${BASE_URL}/tool` },
+  ],
+}
+
 export default async function ToolPage({
   searchParams,
 }: {
@@ -56,6 +65,10 @@ export default async function ToolPage({
       <script
         type="application/ld+json"
         dangerouslySetInnerHTML={{ __html: JSON.stringify(webAppSchema) }}
+      />
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(breadcrumbJsonLd) }}
       />
 
       {/* Hero */}

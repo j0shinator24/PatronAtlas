@@ -14,9 +14,9 @@ import { Badge } from "@/components/ui/badge"
 import { BASE_URL, PRODUCT } from "@/lib/constants"
 
 export const metadata: Metadata = {
-  title: "Demo output",
+  title: { absolute: "PatronAtlas demo — example PAF funder matches" },
   description:
-    "See what PatronAtlas produces. Three example matched funders for a small Queensland literacy charity, with fit reasoning, citations, and draft outreach emails.",
+    "See what PatronAtlas produces. Three example matched funders for a QLD literacy charity, with fit reasoning, ACNC citations, and draft outreach emails.",
   alternates: { canonical: `${BASE_URL}/demo` },
   openGraph: {
     type: "website",
@@ -114,9 +114,40 @@ const exampleMatches: DemoMatch[] = [
   },
 ]
 
+const breadcrumbJsonLd = {
+  "@context": "https://schema.org",
+  "@type": "BreadcrumbList",
+  itemListElement: [
+    { "@type": "ListItem", position: 1, name: "PatronAtlas", item: BASE_URL },
+    { "@type": "ListItem", position: 2, name: "Demo output", item: `${BASE_URL}/demo` },
+  ],
+}
+
+const itemListJsonLd = {
+  "@context": "https://schema.org",
+  "@type": "ItemList",
+  name: "Example PAF matches for Logan Literacy Hub",
+  description: "Three illustrative matched Private and Public Ancillary Funds produced by PatronAtlas.",
+  numberOfItems: exampleMatches.length,
+  itemListElement: exampleMatches.map((m) => ({
+    "@type": "ListItem",
+    position: m.rank,
+    name: m.fundName,
+    description: `${m.type} registered in ${m.state}, fit score ${m.fitScore}/10.`,
+  })),
+}
+
 export default function DemoPage() {
   return (
     <>
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(breadcrumbJsonLd) }}
+      />
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(itemListJsonLd) }}
+      />
       {/* Hero */}
       <section className="border-b border-border bg-gradient-to-br from-primary/5 via-background to-accent/5 py-16 md:py-24">
         <div className="mx-auto max-w-4xl px-4 md:px-8">

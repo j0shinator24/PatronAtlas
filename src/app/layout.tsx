@@ -53,6 +53,7 @@ export const metadata: Metadata = {
 const organisationJsonLd = {
   "@context": "https://schema.org",
   "@type": "Organization",
+  "@id": `${BASE_URL}/#organization`,
   name: BUSINESS.name,
   legalName: BUSINESS.legalName,
   description: BUSINESS.description,
@@ -79,6 +80,15 @@ const organisationJsonLd = {
   ],
 }
 
+const websiteJsonLd = {
+  "@context": "https://schema.org",
+  "@type": "WebSite",
+  "@id": `${BASE_URL}/#website`,
+  url: BASE_URL,
+  name: BUSINESS.name,
+  publisher: { "@id": `${BASE_URL}/#organization` },
+}
+
 export default function RootLayout({
   children,
 }: Readonly<{
@@ -91,6 +101,10 @@ export default function RootLayout({
         <script
           type="application/ld+json"
           dangerouslySetInnerHTML={{ __html: JSON.stringify(organisationJsonLd) }}
+        />
+        <script
+          type="application/ld+json"
+          dangerouslySetInnerHTML={{ __html: JSON.stringify(websiteJsonLd) }}
         />
         <a
           href="#main-content"

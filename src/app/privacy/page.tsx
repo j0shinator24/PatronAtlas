@@ -1,9 +1,23 @@
 import type { Metadata } from "next"
-import { BUSINESS } from "@/lib/constants"
+import { BASE_URL, BUSINESS } from "@/lib/constants"
 
 export const metadata: Metadata = {
   title: "Privacy",
   description: "PatronAtlas privacy policy. What we collect when you use the tool or join the waitlist, why, and how to access or correct your record.",
+  alternates: { canonical: `${BASE_URL}/privacy` },
+  openGraph: {
+    type: "website",
+    locale: "en_AU",
+    siteName: "PatronAtlas",
+    title: "Privacy | PatronAtlas",
+    description: "PatronAtlas privacy policy. What we collect, why, and how to access or correct your record.",
+    url: `${BASE_URL}/privacy`,
+  },
+  twitter: {
+    card: "summary",
+    title: "Privacy | PatronAtlas",
+    description: "PatronAtlas privacy policy. What we collect, why, and how to access or correct your record.",
+  },
 }
 
 export default function PrivacyPage() {

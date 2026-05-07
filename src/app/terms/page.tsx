@@ -1,9 +1,23 @@
 import type { Metadata } from "next"
-import { BUSINESS } from "@/lib/constants"
+import { BASE_URL, BUSINESS } from "@/lib/constants"
 
 export const metadata: Metadata = {
   title: "Terms",
   description: "PatronAtlas terms of use, licence, refund, and compliance posture.",
+  alternates: { canonical: `${BASE_URL}/terms` },
+  openGraph: {
+    type: "website",
+    locale: "en_AU",
+    siteName: "PatronAtlas",
+    title: "Terms | PatronAtlas",
+    description: "PatronAtlas terms of use, licence, refund, and compliance posture.",
+    url: `${BASE_URL}/terms`,
+  },
+  twitter: {
+    card: "summary",
+    title: "Terms | PatronAtlas",
+    description: "PatronAtlas terms of use, licence, refund, and compliance posture.",
+  },
 }
 
 export default function TermsPage() {
