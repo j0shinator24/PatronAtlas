@@ -14,7 +14,6 @@ export const BUSINESS = {
 
 export const PRODUCT = {
   name: "PatronAtlas v1",
-  freeQueries: 3,
   paidPriceAnnual: 290,
   earlyBirdPrice: 190,
   earlyBirdCap: 25,

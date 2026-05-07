@@ -34,17 +34,10 @@ const serviceSchema = {
   offers: [
     {
       "@type": "Offer",
-      name: "Free tier",
-      price: "0",
-      priceCurrency: "AUD",
-      description: `${PRODUCT.freeQueries} queries per month, watermarked output`,
-    },
-    {
-      "@type": "Offer",
       name: "Pro tier",
       price: String(PRODUCT.paidPriceAnnual),
       priceCurrency: "AUD",
-      description: "Unlimited queries, save lists, draft email export. Annual subscription.",
+      description: `Unlimited queries, save lists, draft email export. Annual subscription. Launches ${PRODUCT.launchTiming}.`,
       priceSpecification: {
         "@type": "UnitPriceSpecification",
         price: String(PRODUCT.paidPriceAnnual),
@@ -120,15 +113,15 @@ export default function HomePage() {
               of funders that fit your cause, in about 30 seconds, for ${PRODUCT.paidPriceAnnual} a year.
             </p>
             <div className="mt-10 flex flex-col sm:flex-row gap-4">
-              <Link href="/tool">
+              <Link href="#waitlist">
                 <Button size="lg" className="w-full sm:w-auto text-base px-8 py-6">
-                  Try the free tool
+                  Join the waitlist for Pro
                   <ArrowRight className="ml-2 h-4 w-4" />
                 </Button>
               </Link>
-              <Link href="#waitlist">
+              <Link href="/demo">
                 <Button variant="outline" size="lg" className="w-full sm:w-auto text-base px-8 py-6">
-                  Join the waitlist for Pro
+                  See example output
                 </Button>
               </Link>
             </div>
@@ -272,22 +265,11 @@ export default function HomePage() {
               What does it cost?
             </h2>
             <p className="mt-4 text-lg text-muted-foreground leading-relaxed">
-              PatronAtlas has one paid tier at ${PRODUCT.paidPriceAnnual} per year.
-              Everything else is free.
+              PatronAtlas has one tier. ${PRODUCT.paidPriceAnnual} per year, launching {PRODUCT.launchTiming}.
             </p>
           </div>
 
-          <div className="grid gap-6 md:grid-cols-2 max-w-3xl mb-10">
-            <div className="rounded-2xl border border-border bg-card p-6 md:p-8">
-              <h3 className="text-xl font-semibold mb-2">Free</h3>
-              <p className="text-3xl font-bold text-primary mb-4">$0</p>
-              <ul className="space-y-2 text-sm text-muted-foreground">
-                <li>{PRODUCT.freeQueries} queries per month</li>
-                <li>Watermarked output</li>
-                <li>Same database, same AI</li>
-                <li>Use it for one-off prospect checks</li>
-              </ul>
-            </div>
+          <div className="max-w-md mb-10">
             <div className="rounded-2xl border-2 border-primary/40 bg-primary/5 p-6 md:p-8">
               <h3 className="text-xl font-semibold mb-2">Pro</h3>
               <p className="text-3xl font-bold text-primary mb-4">${PRODUCT.paidPriceAnnual}<span className="text-base font-normal text-muted-foreground">/yr</span></p>
@@ -437,15 +419,15 @@ export default function HomePage() {
       <section className="py-16 md:py-24">
         <div className="mx-auto max-w-3xl px-4 md:px-8 text-center">
           <h2 className="text-2xl md:text-3xl font-bold tracking-tight mb-4">
-            Try the free tool. See what comes back.
+            See what Pro will produce.
           </h2>
           <p className="text-muted-foreground leading-relaxed mb-8">
-            Three queries a month, no signup, no sales call. If the matches are useful,
-            the waitlist is open for Pro.
+            Three example matches show what charity descriptions get back. The full tool
+            launches {PRODUCT.launchTiming} at ${PRODUCT.paidPriceAnnual} a year.
           </p>
-          <Link href="/tool">
+          <Link href="/demo">
             <Button size="lg" className="px-8 py-6 text-base">
-              Find PAFs that fit your cause
+              View example output
               <ArrowRight className="ml-2 h-4 w-4" />
             </Button>
           </Link>

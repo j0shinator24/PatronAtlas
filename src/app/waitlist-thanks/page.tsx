@@ -35,7 +35,7 @@ export default function WaitlistThanksPage() {
           <ul className="space-y-2 text-sm text-muted-foreground">
             <li className="flex items-start gap-2">
               <span className="text-primary font-semibold shrink-0">1.</span>
-              <span>The free tier (3 queries a month, no signup) goes live alongside Pro. You can test it the day it lands.</span>
+              <span>You&apos;ll get the first email the moment Pro is ready to test. Unlimited queries, saved lists, draft outreach emails, all of it.</span>
             </li>
             <li className="flex items-start gap-2">
               <span className="text-primary font-semibold shrink-0">2.</span>

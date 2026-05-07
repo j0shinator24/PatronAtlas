@@ -8,7 +8,7 @@ import { BASE_URL, PRODUCT } from "@/lib/constants"
 export const metadata: Metadata = {
   title: "Find PAFs that fit your cause",
   description:
-    "Free AI tool. Describe your charity, your cause, and your ask. PatronAtlas ranks Australian Private and Public Ancillary Funds with reasoning cited to public ACNC, ABR and ASIC data.",
+    "Submit your charity description and PatronAtlas will email you matched Australian Private and Public Ancillary Funds the moment Pro ships mid-2026, with reasoning cited to public ACNC, ABR and ASIC data.",
   alternates: { canonical: `${BASE_URL}/tool` },
   openGraph: {
     type: "website",
@@ -16,13 +16,13 @@ export const metadata: Metadata = {
     siteName: "PatronAtlas",
     title: "Find PAFs that fit your cause | PatronAtlas",
     description:
-      "Free AI tool. Ranks AU PAFs against your cause, with public-source citations.",
+      "Submit your charity description to be matched against AU PAFs and PuAFs the moment Pro launches mid-2026.",
     url: `${BASE_URL}/tool`,
   },
   twitter: {
     card: "summary_large_image",
     title: "Find PAFs that fit your cause | PatronAtlas",
-    description: "Free AI tool. Ranks AU PAFs against your cause.",
+    description: "Submit your charity description for AU PAF matching when Pro launches.",
   },
 }
 
@@ -32,7 +32,7 @@ const webAppSchema = {
   "@id": `${BASE_URL}/tool#app`,
   name: "PatronAtlas Funder Match",
   description:
-    "Free AI tool that ranks Australian Private and Public Ancillary Funds against a charity's cause, region, and ask amount. Outputs a citation-backed shortlist and draft outreach email.",
+    "AI tool that ranks Australian Private and Public Ancillary Funds against a charity's cause, region, and ask amount. Outputs a citation-backed shortlist and draft outreach email. Launches mid-2026.",
   url: `${BASE_URL}/tool`,
   applicationCategory: "BusinessApplication",
   operatingSystem: "Any (browser-based)",
@@ -64,9 +64,10 @@ export default function ToolPage() {
             Find PAFs that fit your cause.
           </h1>
           <p className="text-lg text-muted-foreground leading-relaxed max-w-[60ch]">
-            Free for the first three queries every month. No signup. No sales call.
-            The tool reads around 1,500 ACNC-visible Australian ancillary funds and tells
-            you which ones might fit. You verify before you send.
+            Submit your charity description and we&apos;ll email you matched funders the
+            moment Pro launches mid-2026. The tool reads around 1,500 ACNC-visible
+            Australian ancillary funds and ranks them against your cause. You verify
+            before you send.
           </p>
           <div className="mt-6 rounded-xl border border-accent/30 bg-accent/5 p-4 max-w-[60ch]">
             <p className="text-sm leading-relaxed">

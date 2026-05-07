@@ -133,13 +133,13 @@ export function ToolQueryForm() {
       ) : null}
 
       <Button type="submit" size="lg" className="w-full sm:w-auto px-8 h-12 text-base" disabled={isPending}>
-        {isPending ? "Sending..." : "Find my funders"}
+        {isPending ? "Sending..." : "Submit my description"}
         {!isPending && <ArrowRight className="ml-2 h-4 w-4" />}
       </Button>
 
       <p className="text-xs text-muted-foreground leading-relaxed">
-        Free for the first three queries each month. We don&apos;t store your description
-        unless you save it. Spam Act 2003 s.16(3) compliant.
+        Pro launches mid-2026. We&apos;ll email you the matched funders the moment v1 ships.
+        Spam Act 2003 s.16(3) compliant.
       </p>
     </form>
   )

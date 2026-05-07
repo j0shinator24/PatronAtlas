@@ -34,8 +34,8 @@ export function Header() {
             <span className="text-xl font-semibold tracking-tight text-foreground block">
               PatronAtlas
             </span>
-            <span className="dark-reveal block text-[20px] font-handwritten text-primary/70 -mt-1 leading-none tracking-wide">
-              an atlas of Australia&#39;s patrons
+            <span className="block text-xs font-medium text-muted-foreground/80 -mt-0.5 leading-none">
+              by Waylight
             </span>
           </div>
         </Link>
