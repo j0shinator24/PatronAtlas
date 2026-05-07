@@ -1,50 +1,125 @@
--- Waylight Data website migration
--- Run inside the existing waylight-data Supabase project.
--- All tables prefixed wd_ to avoid colliding with the data-pipeline tables.
+-- ============================================================================
+-- PatronAtlas Supabase migration
+-- Run this in a NEW Supabase project's SQL Editor.
+-- Do NOT run this in the waylight-data project; the table prefixes are
+-- different (pa_ here, wd_ in waylight-data).
+-- ============================================================================
 
--- Sample requests captured from the website form.
-create table if not exists public.wd_sample_requests (
+-- ----------------------------------------------------------------------------
+-- 1. Waitlist signups (the home page #waitlist form)
+-- ----------------------------------------------------------------------------
+create table if not exists public.pa_waitlist (
   id uuid primary key default gen_random_uuid(),
   created_at timestamptz not null default now(),
+
+  charity text not null,
   name text not null,
+  role text not null check (role in (
+    'fundraiser',
+    'exec-director',
+    'grant-writer',
+    'board-member',
+    'other'
+  )),
   email text not null,
-  company text,
-  vertical text not null check (vertical in ('allied-health', 'decontamination', 'marine-towing', 'custom')),
-  custom_filters_text text,
+  where_look text not null,
+
   source text not null default 'website',
   notes text
 );
 
-create index if not exists wd_sample_requests_email_idx on public.wd_sample_requests (email);
-create index if not exists wd_sample_requests_created_at_idx on public.wd_sample_requests (created_at desc);
-create index if not exists wd_sample_requests_vertical_idx on public.wd_sample_requests (vertical);
+create index if not exists pa_waitlist_email_idx
+  on public.pa_waitlist (email);
+create index if not exists pa_waitlist_created_at_idx
+  on public.pa_waitlist (created_at desc);
+create index if not exists pa_waitlist_role_idx
+  on public.pa_waitlist (role);
 
--- Slot counter, one row per sellable SKU.
-create table if not exists public.wd_slot_counter (
-  slug text primary key,
-  founder_filled int not null default 0,
-  founder_cap int not null default 5,
-  retail_filled int not null default 0,
-  retail_cap int not null default 5,
-  last_updated timestamptz not null default now()
+comment on table public.pa_waitlist is
+  'Waitlist signups from the home page #waitlist form. PII: name, email. Service-role-only access.';
+
+-- ----------------------------------------------------------------------------
+-- 2. Tool queries (the /tool form, charity description for matching)
+-- ----------------------------------------------------------------------------
+create table if not exists public.pa_tool_queries (
+  id uuid primary key default gen_random_uuid(),
+  created_at timestamptz not null default now(),
+
+  charity text not null,
+  email text not null,
+
+  description text not null,
+  region text not null check (region in (
+    'australia-wide',
+    'NSW', 'VIC', 'QLD', 'WA', 'SA', 'TAS', 'ACT', 'NT',
+    'overseas'
+  )),
+  ask text not null check (ask in (
+    'under-5k',
+    '5k-25k',
+    '25k-100k',
+    '100k-500k',
+    'over-500k'
+  )),
+  context text,
+
+  source text not null default 'tool-page',
+  notes text,
+
+  -- For when matchFunds() actually runs against this row in the paid tier:
+  matched_at timestamptz,
+  match_count int,
+  match_cost_aud numeric(10, 4)
 );
 
--- Seed the launch product.
-insert into public.wd_slot_counter (slug, founder_filled, founder_cap, retail_filled, retail_cap)
-values ('allied-health-v1', 0, 5, 0, 5)
-on conflict (slug) do nothing;
+create index if not exists pa_tool_queries_email_idx
+  on public.pa_tool_queries (email);
+create index if not exists pa_tool_queries_created_at_idx
+  on public.pa_tool_queries (created_at desc);
+create index if not exists pa_tool_queries_region_idx
+  on public.pa_tool_queries (region);
+create index if not exists pa_tool_queries_ask_idx
+  on public.pa_tool_queries (ask);
+create index if not exists pa_tool_queries_unmatched_idx
+  on public.pa_tool_queries (created_at desc) where matched_at is null;
 
--- Row level security: lock both tables down by default.
-alter table public.wd_sample_requests enable row level security;
-alter table public.wd_slot_counter enable row level security;
+comment on table public.pa_tool_queries is
+  'Charity descriptions submitted via /tool, queued for AI matching when Pro launches. PII: name, email, description. Service-role-only access.';
 
--- Public read on slot counter so the SSR hero can display state.
-drop policy if exists wd_slot_counter_public_read on public.wd_slot_counter;
-create policy wd_slot_counter_public_read
-  on public.wd_slot_counter
-  for select
-  using (true);
+-- ----------------------------------------------------------------------------
+-- 3. Row-level security
+-- All writes happen via the service role key from server actions
+-- (sample-request.ts, tool-query.ts). Anon client cannot read or write.
+-- ----------------------------------------------------------------------------
+alter table public.pa_waitlist enable row level security;
+alter table public.pa_tool_queries enable row level security;
 
--- No public read on sample requests. Only the service role key (server-side) can read.
--- The website form writes through the service role key. Anon clients cannot read.
--- Edits made manually via Supabase dashboard or future admin UI.
+-- No policies = no access for anon or authenticated users.
+-- The service role key bypasses RLS, so server actions write without
+-- needing explicit policies.
+
+-- ----------------------------------------------------------------------------
+-- 4. Operational helpers (run from Supabase SQL Editor as needed)
+-- ----------------------------------------------------------------------------
+
+-- Recent waitlist signups (run manually to monitor):
+--   select created_at, charity, name, role, email, where_look
+--   from public.pa_waitlist order by created_at desc limit 50;
+
+-- Tool queries waiting for AI matching (when Pro is ready):
+--   select id, created_at, charity, email, description, region, ask
+--   from public.pa_tool_queries where matched_at is null
+--   order by created_at asc;
+
+-- Mark a query as matched (after matchFunds() runs):
+--   update public.pa_tool_queries
+--   set matched_at = now(), match_count = $1, match_cost_aud = $2
+--   where id = $3;
+
+-- Per-region distribution (early Mom Test signal):
+--   select region, count(*) from public.pa_tool_queries
+--   group by region order by count(*) desc;
+
+-- Per-cause subtype clustering (paste the description column into Claude later):
+--   select id, charity, description from public.pa_tool_queries
+--   order by created_at desc limit 100;
