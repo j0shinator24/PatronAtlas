@@ -254,10 +254,10 @@ export default async function HomePage({
             <p className="text-sm leading-relaxed">
               <ShieldCheck className="h-4 w-4 text-accent inline mr-1.5 -mt-0.5" />
               <strong className="text-foreground">Honesty note.</strong>{" "}
-              About half of Australian PAFs choose not to appear on the ACNC Charity Register.
-              PatronAtlas does not currently include those. PafGUIDE does, by paying researchers
-              to find them one by one. If your charity needs the dark half too, PafGUIDE at
-              $2,699 a year is still your tool.
+              About a third of Australian PAFs choose not to publish on the ACNC
+              Charity Register. PatronAtlas does not currently include those. If
+              your charity needs the dark third too, hand-curated prospect-research
+              databases cover them at an order of magnitude more cost.
             </p>
           </div>
         </div>
@@ -294,78 +294,47 @@ export default async function HomePage({
           </div>
 
           <p className="text-base text-muted-foreground leading-relaxed max-w-[60ch] border-l-2 border-primary/30 pl-4">
-            You only need one $5,000 grant to clear the year of Pro. PafGUIDE&apos;s
-            $2,699 single-user subscription needs an $18,000 grant for the same maths.
-            The smaller cheque is the more honest target.
+            Pro pays for itself the first time it points you at a funder you would
+            not have found on your own. The maths only has to work once a year.
           </p>
         </div>
       </section>
 
-      {/* Comparison */}
-      <section id="compare" className="border-t border-border bg-muted/20 py-20 md:py-28 scroll-mt-20">
+      {/* Who it's for */}
+      <section id="who" className="border-t border-border bg-muted/20 py-20 md:py-28 scroll-mt-20">
         <div className="mx-auto max-w-6xl px-4 md:px-8">
           <div className="max-w-[60ch] mb-10">
-            <Badge variant="secondary" className="mb-4">Comparison</Badge>
+            <Badge variant="secondary" className="mb-4">Who it&apos;s for</Badge>
             <h2 className="text-3xl md:text-4xl font-bold tracking-tight">
-              How is this different from PafGUIDE or Strategic Grants?
+              Built for the small DGR1
             </h2>
             <p className="mt-4 text-lg text-muted-foreground leading-relaxed">
-              PafGUIDE is a deeper database. PatronAtlas is a faster, cheaper, AI-led tool
-              over the half of the data that&apos;s public.
+              The charities most likely to get value from PatronAtlas don&apos;t have a
+              prospect researcher on staff and don&apos;t have the budget for a four-figure
+              database subscription.
             </p>
           </div>
 
-          <div className="overflow-x-auto rounded-2xl border border-border bg-card mb-8">
-            <table className="w-full text-left">
-              <thead className="bg-muted/50 text-sm">
-                <tr>
-                  <th className="px-4 py-3 font-semibold" />
-                  <th className="px-4 py-3 font-semibold">PatronAtlas</th>
-                  <th className="px-4 py-3 font-semibold">PafGUIDE</th>
-                  <th className="px-4 py-3 font-semibold">Strategic Grants GEMS</th>
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-border text-sm">
-                <tr>
-                  <td className="px-4 py-3 font-medium">Annual cost</td>
-                  <td className="px-4 py-3 text-primary font-semibold">${PRODUCT.paidPriceAnnual}</td>
-                  <td className="px-4 py-3 text-muted-foreground">$2,699</td>
-                  <td className="px-4 py-3 text-muted-foreground">~$500 to $2,000</td>
-                </tr>
-                <tr>
-                  <td className="px-4 py-3 font-medium">Funds covered</td>
-                  <td className="px-4 py-3 text-muted-foreground">~1,500 ACNC-visible</td>
-                  <td className="px-4 py-3 text-muted-foreground">Every PAF and PuAF</td>
-                  <td className="px-4 py-3 text-muted-foreground">All ACNC-visible grants + PAFs</td>
-                </tr>
-                <tr>
-                  <td className="px-4 py-3 font-medium">AI reasoning per match</td>
-                  <td className="px-4 py-3 text-primary font-semibold">Yes</td>
-                  <td className="px-4 py-3 text-muted-foreground">No</td>
-                  <td className="px-4 py-3 text-muted-foreground">No</td>
-                </tr>
-                <tr>
-                  <td className="px-4 py-3 font-medium">Draft outreach emails</td>
-                  <td className="px-4 py-3 text-primary font-semibold">Yes</td>
-                  <td className="px-4 py-3 text-muted-foreground">No</td>
-                  <td className="px-4 py-3 text-muted-foreground">No</td>
-                </tr>
-                <tr>
-                  <td className="px-4 py-3 font-medium">Founded</td>
-                  <td className="px-4 py-3 text-muted-foreground">2026</td>
-                  <td className="px-4 py-3 text-muted-foreground">2009</td>
-                  <td className="px-4 py-3 text-muted-foreground">2010s</td>
-                </tr>
-              </tbody>
-            </table>
+          <div className="grid gap-6 md:grid-cols-2 max-w-4xl">
+            <div className="rounded-xl border border-primary/30 bg-primary/5 p-6">
+              <p className="text-sm font-semibold text-primary mb-2">PatronAtlas is for you if</p>
+              <ul className="space-y-2 text-sm text-muted-foreground leading-relaxed">
+                <li>You&apos;re DGR1 endorsed and looking for trust and foundation income</li>
+                <li>Your prospect research is currently a Google search and an old spreadsheet</li>
+                <li>${PRODUCT.paidPriceAnnual} a year is the right order of magnitude for you, not $2,000+</li>
+                <li>You want the AI to read the public data and write you a shortlist</li>
+              </ul>
+            </div>
+            <div className="rounded-xl border border-border bg-card p-6">
+              <p className="text-sm font-semibold text-muted-foreground mb-2">PatronAtlas is not for you if</p>
+              <ul className="space-y-2 text-sm text-muted-foreground leading-relaxed">
+                <li>You have a major-gifts team and need every PAF including the unlisted ones</li>
+                <li>You need formal funder relationship history and CRM integrations</li>
+                <li>You want a human researcher on call, not an AI</li>
+                <li>You&apos;ve already got prospect research nailed and don&apos;t need help</li>
+              </ul>
+            </div>
           </div>
-
-          <p className="text-base text-muted-foreground leading-relaxed max-w-[60ch]">
-            PafGUIDE is the deeper resource. If you have the budget and a major-gifts
-            program big enough to justify $2,699, you should probably have both. PatronAtlas
-            is for the small DGR1 that has ${PRODUCT.paidPriceAnnual} a year for prospect
-            research, not $2,699, and wants the AI to do the reading.
-          </p>
         </div>
       </section>
 

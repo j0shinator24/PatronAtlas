@@ -9,8 +9,8 @@ export const faqItems = [
     a: "A Private Ancillary Fund is a charitable trust set up by a single family, individual, or business under the Income Tax Assessment Act 1997 (Subdivision 30-B) and the PAF Guidelines 2009. It holds DGR Item 2 endorsement, which lets it distribute tax-effectively to DGR Item 1 charities. Each PAF must distribute at least 5% of its net assets every year. Around 2,200 PAFs are registered in Australia, holding billions in assets together.",
   },
   {
-    q: "How is PatronAtlas different from PafGUIDE?",
-    a: "PafGUIDE is the premium prospect-research database for the philanthropy sector, running since 2009, with researchers who individually profile every PAF in Australia, including the half that don't show on ACNC. It costs $2,699 a year. PatronAtlas is cheaper, narrower, faster. We use AI to read the public half of the data and write you a fund-fit shortlist in about 30 seconds for $290 a year. PafGUIDE is the reference work. PatronAtlas is the daily tool.",
+    q: "How is PatronAtlas different from existing prospect-research tools?",
+    a: "Premium prospect-research databases in Australia have been running since the late 2000s. They employ researchers who individually profile every PAF, including those that don't publish on the ACNC register, and they cost in the order of $2,000+ per seat per year. PatronAtlas is cheaper, narrower, and faster. We use AI to read the public ACNC-visible data and write you a fund-fit shortlist in about 30 seconds for $290 a year. The premium tools are the reference work. PatronAtlas is the daily tool.",
   },
   {
     q: "Where does PatronAtlas get its data?",
