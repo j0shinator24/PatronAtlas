@@ -21,13 +21,14 @@ export async function GET(
   const { slug } = await params
   const content = ogContent[slug] ?? ogContent.default
 
-  // Inter weights from Google Fonts CDN (Satori-compatible woff binaries).
+  // Inter weights via fontsource on jsdelivr (stable, returns woff).
+  // Satori does not support woff2; using woff explicitly.
   const [interRegular, interBold] = await Promise.all([
     fetch(
-      "https://fonts.gstatic.com/s/inter/v18/UcCO3FwrK3iLTeHuS_nVMrMxCp50ojIw2boKoduKmMEVuHWMu5SQyuh-uuY.woff",
+      "https://cdn.jsdelivr.net/npm/@fontsource/inter@5.0.16/files/inter-latin-400-normal.woff",
     ).then((r) => r.arrayBuffer()),
     fetch(
-      "https://fonts.gstatic.com/s/inter/v18/UcCO3FwrK3iLTeHuS_nVMrMxCp50ojIw2boKoduKmMEVuFuYMZhrib2Bg-4.woff",
+      "https://cdn.jsdelivr.net/npm/@fontsource/inter@5.0.16/files/inter-latin-700-normal.woff",
     ).then((r) => r.arrayBuffer()),
   ])
 
