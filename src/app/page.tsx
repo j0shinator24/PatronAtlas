@@ -429,9 +429,20 @@ export default async function HomePage({
             ))}
           </div>
 
+          {/* Prominent verified-date stamp directly underneath the table.
+              Defamation / ACL s.18 safety hinges on the date being current
+              and visible. Bumping COMPARE_VERIFIED_DATE re-stamps every row. */}
+          <div className="mb-5 flex flex-wrap items-center gap-3 text-sm">
+            <span className="inline-flex items-center gap-2 rounded-full border-2 border-primary/40 bg-primary/10 px-4 py-1.5 font-semibold text-foreground">
+              <ShieldCheck className="h-4 w-4 text-primary" aria-hidden="true" />
+              Verified {COMPARE_VERIFIED_DATE}
+            </span>
+            <span className="text-muted-foreground">Re-checked quarterly. Date bumps every refresh.</span>
+          </div>
+
           <div className="rounded-xl border border-border bg-card/60 p-5 text-sm text-muted-foreground leading-relaxed">
             <p className="mb-2">
-              <span className="font-medium text-foreground">Sources, all checked {COMPARE_VERIFIED_DATE}:</span>{" "}
+              <span className="font-medium text-foreground">Sources:</span>{" "}
               {COMPARE_SOURCES.map((s, i) => (
                 <span key={s.url}>
                   <a
