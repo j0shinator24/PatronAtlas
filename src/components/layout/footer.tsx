@@ -64,7 +64,7 @@ export function Footer() {
             <h3 className="text-sm font-semibold mb-4">Sister sites</h3>
             <ul className="space-y-2">
               <li>
-                <a href="https://waylightpm.com.au" target="_blank" rel="noopener noreferrer" className="text-sm text-muted-foreground hover:text-foreground transition-colors">
+                <a href="https://waylight.com.au" target="_blank" rel="noopener noreferrer" className="text-sm text-muted-foreground hover:text-foreground transition-colors">
                   Waylight Plan Management
                 </a>
               </li>
