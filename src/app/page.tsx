@@ -15,7 +15,15 @@ import { Badge } from "@/components/ui/badge"
 import { FeatureCard } from "@/components/feature-card"
 import { HeroBackground } from "@/components/hero-background"
 import { SampleForm } from "@/components/sample-form"
-import { BUSINESS, PRODUCT, BASE_URL } from "@/lib/constants"
+import {
+  BUSINESS,
+  PRODUCT,
+  BASE_URL,
+  COMPARE_VERIFIED_DATE,
+  COMPARE_COMPETITORS,
+  COMPARE_ROWS,
+  COMPARE_SOURCES,
+} from "@/lib/constants"
 import { faqItems } from "@/lib/faq"
 
 const serviceSchema = {
@@ -334,6 +342,115 @@ export default async function HomePage({
                 <li>You&apos;ve already got prospect research nailed and don&apos;t need help</li>
               </ul>
             </div>
+          </div>
+        </div>
+      </section>
+
+      {/* Compare. Defamation-safe: every cell bounded to what each provider
+          publishes about themselves on COMPARE_VERIFIED_DATE. "Not advertised"
+          = feature not described on their public website. No claim about
+          competitor capability, only competitor advertising. */}
+      <section id="compare" className="border-t border-border bg-muted/20 py-20 md:py-28 scroll-mt-20">
+        <div className="mx-auto max-w-6xl px-4 md:px-8">
+          <div className="max-w-[60ch] mb-10">
+            <Badge variant="secondary" className="mb-4">How we compare</Badge>
+            <h2 className="text-3xl md:text-4xl font-bold tracking-tight">
+              How does PatronAtlas compare to PafGUIDE, GEM Local, Giftsearch, and the Funding Centre?
+            </h2>
+            <p className="mt-4 text-lg text-muted-foreground leading-relaxed">
+              Public-source check completed {COMPARE_VERIFIED_DATE}. The comparison below reflects
+              what each provider publishes on their pricing or product pages on that date.
+              &quot;Not advertised&quot; means the feature was not described on the provider&apos;s
+              public website when checked. PatronAtlas does not assert any competitor cannot deliver
+              these features, only that they do not advertise them.
+            </p>
+          </div>
+
+          {/* Desktop / wide-tablet table. Hidden under lg. */}
+          <div className="hidden lg:block overflow-x-auto rounded-2xl border-2 border-primary/30 bg-gradient-to-br from-primary/5 via-transparent to-accent/5 mb-8">
+            <table className="w-full text-left text-sm">
+              <thead className="bg-primary/10">
+                <tr>
+                  <th scope="col" className="px-4 py-3 font-semibold align-bottom">Dimension</th>
+                  {COMPARE_COMPETITORS.map((c) => (
+                    <th
+                      key={c.key}
+                      scope="col"
+                      className={`px-4 py-3 font-semibold align-bottom ${c.isHome ? "bg-primary/15" : ""}`}
+                    >
+                      <span className="block">{c.name}</span>
+                      <span className="block text-xs font-normal text-muted-foreground mt-0.5">by {c.by}</span>
+                    </th>
+                  ))}
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-border">
+                {COMPARE_ROWS.map((row) => (
+                  <tr key={row.label}>
+                    <th scope="row" className="px-4 py-3 font-medium align-top text-foreground whitespace-normal">
+                      {row.label}
+                    </th>
+                    {row.cells.map((cell, i) => (
+                      <td
+                        key={i}
+                        className={`px-4 py-3 align-top ${COMPARE_COMPETITORS[i].isHome ? "bg-primary/5 text-foreground font-medium" : "text-muted-foreground"}`}
+                      >
+                        {cell}
+                      </td>
+                    ))}
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+
+          {/* Mobile + tablet stacked cards. CSS-first per JS-restricted webview default. */}
+          <div className="lg:hidden space-y-4 mb-8">
+            {COMPARE_COMPETITORS.map((c, idx) => (
+              <div
+                key={c.key}
+                className={`rounded-xl border p-5 ${c.isHome ? "border-primary/40 bg-primary/5" : "border-border bg-card/60"}`}
+              >
+                <div className="flex items-baseline justify-between gap-3 mb-3">
+                  <h3 className="text-lg font-semibold">{c.name}</h3>
+                  <span className="text-xs font-mono text-muted-foreground">by {c.by}</span>
+                </div>
+                <dl className="space-y-2.5 text-sm">
+                  {COMPARE_ROWS.map((row) => (
+                    <div key={row.label} className="grid grid-cols-[140px_1fr] gap-3">
+                      <dt className="text-muted-foreground">{row.label}</dt>
+                      <dd className={c.isHome ? "text-foreground font-medium" : "text-muted-foreground"}>
+                        {row.cells[idx]}
+                      </dd>
+                    </div>
+                  ))}
+                </dl>
+              </div>
+            ))}
+          </div>
+
+          <div className="rounded-xl border border-border bg-card/60 p-5 text-sm text-muted-foreground leading-relaxed">
+            <p className="mb-2">
+              <span className="font-medium text-foreground">Sources, all checked {COMPARE_VERIFIED_DATE}:</span>{" "}
+              {COMPARE_SOURCES.map((s, i) => (
+                <span key={s.url}>
+                  <a
+                    href={s.url}
+                    className="underline decoration-dotted hover:text-foreground"
+                    rel="noopener noreferrer"
+                    target="_blank"
+                  >
+                    {s.name}
+                  </a>
+                  {i < COMPARE_SOURCES.length - 1 ? "; " : "."}
+                </span>
+              ))}
+            </p>
+            <p>
+              PatronAtlas is the cheap, AI-driven, ACNC-visible-only option. The deeper databases
+              above charge more and have wider coverage. We update this section if pricing or
+              feature pages change.
+            </p>
           </div>
         </div>
       </section>
