@@ -12,6 +12,7 @@ import {
 } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
+import { CompareCellView } from "@/components/compare-cell"
 import { FeatureCard } from "@/components/feature-card"
 import { HeroBackground } from "@/components/hero-background"
 import { SampleForm } from "@/components/sample-form"
@@ -393,9 +394,9 @@ export default async function HomePage({
                     {row.cells.map((cell, i) => (
                       <td
                         key={i}
-                        className={`px-4 py-3 align-top ${COMPARE_COMPETITORS[i].isHome ? "bg-primary/5 text-foreground font-medium" : "text-muted-foreground"}`}
+                        className={`px-4 py-3 align-top ${COMPARE_COMPETITORS[i].isHome ? "bg-primary/5" : ""}`}
                       >
-                        {cell}
+                        <CompareCellView cell={cell} isHome={COMPARE_COMPETITORS[i].isHome} />
                       </td>
                     ))}
                   </tr>
@@ -404,30 +405,44 @@ export default async function HomePage({
             </table>
           </div>
 
-          {/* Mobile + tablet stacked cards. CSS-first per JS-restricted webview default. */}
-          <div className="lg:hidden space-y-4 mb-8">
-            {COMPARE_COMPETITORS.map((c, idx) => (
-              <div
-                key={c.key}
-                className={`rounded-xl border p-5 ${c.isHome ? "border-primary/40 bg-primary/5" : "border-border bg-card/60"}`}
-              >
-                <div className="flex items-baseline justify-between gap-3 mb-3">
-                  <h3 className="text-lg font-semibold">{c.name}</h3>
-                  <span className="text-xs font-mono text-muted-foreground">by {c.by}</span>
+          {/* Mobile + tablet horizontal scroll-snap slider. Each card is
+              one provider, swipe between them. CSS-first scroll-snap works
+              in JS-restricted webviews. WCAG 1.4.10 Reflow + 2.1.1 Keyboard
+              via tabIndex (arrow-key scrolls the region). */}
+          <div
+            className="lg:hidden -mx-4 px-4 mb-3 overflow-x-auto snap-x snap-mandatory"
+            role="region"
+            aria-label="Provider comparison cards. Swipe horizontally to scroll between providers."
+            tabIndex={0}
+          >
+            <div className="flex gap-4 pb-3">
+              {COMPARE_COMPETITORS.map((c, idx) => (
+                <div
+                  key={c.key}
+                  className={`snap-center shrink-0 w-[18rem] sm:w-[22rem] rounded-xl border p-5 ${c.isHome ? "border-primary/40 bg-primary/5" : "border-border bg-card/60"}`}
+                >
+                  <div className="flex items-baseline justify-between gap-3 mb-3">
+                    <h3 className="text-lg font-semibold">{c.name}</h3>
+                    <span className="text-xs font-mono text-muted-foreground">by {c.by}</span>
+                  </div>
+                  <dl className="space-y-2.5 text-sm">
+                    {COMPARE_ROWS.map((row) => (
+                      <div key={row.label} className="grid grid-cols-[110px_1fr] gap-3">
+                        <dt className="text-muted-foreground">{row.label}</dt>
+                        <dd>
+                          <CompareCellView cell={row.cells[idx]} isHome={c.isHome} />
+                        </dd>
+                      </div>
+                    ))}
+                  </dl>
                 </div>
-                <dl className="space-y-2.5 text-sm">
-                  {COMPARE_ROWS.map((row) => (
-                    <div key={row.label} className="grid grid-cols-[140px_1fr] gap-3">
-                      <dt className="text-muted-foreground">{row.label}</dt>
-                      <dd className={c.isHome ? "text-foreground font-medium" : "text-muted-foreground"}>
-                        {row.cells[idx]}
-                      </dd>
-                    </div>
-                  ))}
-                </dl>
-              </div>
-            ))}
+              ))}
+            </div>
           </div>
+
+          <p className="lg:hidden mb-8 text-xs text-muted-foreground italic">
+            Swipe sideways to compare across {COMPARE_COMPETITORS.length} providers.
+          </p>
 
           {/* Prominent verified-date stamp directly underneath the table.
               Defamation / ACL s.18 safety hinges on the date being current
