@@ -160,7 +160,7 @@ async function main() {
   const t0 = Date.now()
 
   const res = await fetch(ACNC_CSV_URL, {
-    headers: { "User-Agent": "PatronAtlas data fetcher (Joshua via Waylight Pty Ltd)" },
+    headers: { "User-Agent": "PatronAtlas data fetcher (Joshua Libeau Mowat, ABN 97 544 538 291)" },
   })
   if (!res.ok) {
     log(`Download failed: HTTP ${res.status}`)

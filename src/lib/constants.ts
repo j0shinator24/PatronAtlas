@@ -2,8 +2,8 @@ export const BASE_URL = "https://patronatlas.com.au"
 
 export const BUSINESS = {
   name: "PatronAtlas",
-  legalName: "Waylight Pty Ltd",
-  abn: "TBA",
+  legalName: "Joshua Libeau Mowat",
+  abn: "97 544 538 291",
   email: "info@patronatlas.com.au",
   founder: "Joshua",
   location: "Australia",

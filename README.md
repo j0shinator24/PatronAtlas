@@ -1,8 +1,8 @@
 # PatronAtlas website
 
 Public site for patronatlas.com.au. Sister brand to Waylight Plan Management
-(waylightpm.com.au) and Waylight Data (waylightdata.com.au), all run under
-Waylight Pty Ltd.
+(waylightpm.com.au) and Waylight Data (waylightdata.com.au), all operated as
+sole trader by Joshua Libeau Mowat (ABN 97 544 538 291) until incorporation.
 
 PatronAtlas is an AI prospect-research tool for Australian DGR1 charities.
 The free tier runs at /tool. Pro launches mid-2026 at $290 a year.

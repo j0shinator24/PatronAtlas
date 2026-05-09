@@ -26,7 +26,7 @@ export function Footer() {
             </p>
             <div className="flex items-start gap-2 text-xs text-muted-foreground leading-relaxed">
               <ShieldCheck className="h-3.5 w-3.5 text-primary shrink-0 mt-0.5" />
-              <span>Built by Joshua. Sole operator under Waylight Pty Ltd, AU-based. See TERMS for entity details.</span>
+              <span>Built by Joshua. Sole trader, AU-based. See TERMS for entity details.</span>
             </div>
           </div>
 
