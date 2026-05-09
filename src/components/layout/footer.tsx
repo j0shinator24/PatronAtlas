@@ -84,7 +84,7 @@ export function Footer() {
         <Separator className="my-8" />
 
         <div className="flex flex-col sm:flex-row items-center justify-between gap-4 text-xs text-muted-foreground">
-          <p>{BUSINESS.legalName}</p>
+          <p>{BUSINESS.legalName} | ABN {BUSINESS.abn}</p>
           <p>An atlas of Australia&#39;s philanthropic funders</p>
           <p>&copy; {new Date().getFullYear()} {BUSINESS.legalName}</p>
         </div>

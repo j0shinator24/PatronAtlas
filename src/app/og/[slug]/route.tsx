@@ -1,10 +1,7 @@
 import { ImageResponse } from "next/og"
 import { ogContent } from "@/lib/og-content"
 
-// Edge runtime required by next/og ImageResponse.
-export const runtime = "edge"
-
-// Cache OG images at the edge for 24h. Re-renders only when content map changes
+// Cache OG images for 24h. Re-renders only when content map changes
 // and the route re-deploys.
 export const revalidate = 86400
 
