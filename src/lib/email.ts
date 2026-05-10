@@ -1,7 +1,12 @@
 import { Resend } from "resend"
 
 const resendKey = process.env.RESEND_API_KEY ?? ""
-const fromAddress = process.env.RESEND_FROM ?? "Joshua at PatronAtlas <info@patronatlas.com.au>"
+const fromAddress = process.env.RESEND_FROM ?? "PatronAtlas <noreply@waylightdata.com.au>"
+// Replies to PatronAtlas emails route to the real PatronAtlas inbox.
+// Until Resend Pro is purchased + patronatlas.com.au verified as a sender,
+// the From: is the verified waylightdata.com.au domain (free Resend allows
+// only one verified domain). Reply-To bridges that gap.
+const replyToAddress = process.env.RESEND_REPLY_TO ?? "admin@patronatlas.com.au"
 
 const client = resendKey ? new Resend(resendKey) : null
 
@@ -35,6 +40,7 @@ export async function sendWaitlistEmail(args: {
     const result = await client.emails.send({
       from: fromAddress,
       to: args.toEmail,
+      replyTo: replyToAddress,
       subject: "You are on the PatronAtlas waitlist.",
       text: lines.join("\n"),
     })
