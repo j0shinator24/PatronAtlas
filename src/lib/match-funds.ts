@@ -1,35 +1,29 @@
 /**
  * match-funds.ts
  *
- * The PatronAtlas matching engine. Calls Claude Haiku 4.5 with the cached
- * ACNC charity dataset as system context, returns ranked top-10 matches
- * for a given charity description.
+ * The PatronAtlas matching engine. Calls OpenRouter's free `gpt-oss-120b`
+ * model with the cached ACNC charity dataset as context, returns ranked
+ * top-10 matches for a given charity description.
  *
- * IMPORTANT: This function costs money per call. Do not expose it to
- * unauthenticated users. The /tool form route saves to pa_tool_queries
- * without calling this function. A future paid-tier route at /tool/run
- * will call matchFunds() once auth + Stripe are in place.
+ * Cost: USD 0 per call (free model on OpenRouter). No prompt caching since
+ * the free tier doesn't support it; the trade-off is the entire fund
+ * context is sent on every call. Acceptable while it's free.
  *
- * Cost (Claude Haiku 4.5 = $1/$5 per 1M tokens, prompt caching enabled):
- *   - First query in 5-min cache window: ~$0.30 (cache write)
- *   - Subsequent queries: ~$0.025 (cache read)
- *
- * Verify cache hits via the returned usage.cacheRead value. Zero hits
- * across repeated calls means a silent invalidator: re-check that
- * fundContext is byte-identical between calls.
+ * If the free tier ever rate-limits or disappears, swap MODEL to a paid
+ * OpenRouter model (e.g. `anthropic/claude-haiku-4.5`) — request shape
+ * stays identical because OpenRouter is OpenAI-compatible.
  *
  * v1 dataset scope (per scripts/fetch-acnc.mjs):
  * The ACNC bulk register has no explicit ancillary-fund flag. v1 uses a
  * name-pattern filter (matches Foundation, Trust, Fund, Ancillary,
  * Philanthropic, Charitable, Bequest) producing a broader set of
  * Australian foundations and trusts than just PAFs/PuAFs. The system
- * prompt below tells Claude to be honest about this.
+ * prompt below tells the model to be honest about this.
  *
  * v2 will cross-reference the ATO DGR Item 2 endorsement list to filter
  * to actual ancillary funds only.
  */
 
-import Anthropic from "@anthropic-ai/sdk"
 import { readFile } from "node:fs/promises"
 import path from "node:path"
 import { z } from "zod"
@@ -54,16 +48,13 @@ async function loadFunds(): Promise<{ funds: FundProfile[]; serialized: string }
   const filePath = path.join(process.cwd(), "data", "acnc-funds.json")
   const content = await readFile(filePath, "utf-8")
   const funds = JSON.parse(content) as FundProfile[]
-  // Deterministic serialization. Stable byte-identical context is required
-  // for prompt caching to actually hit on subsequent requests.
   const serialized = `<funds>${JSON.stringify(funds)}</funds>`
   _fundsCache = { funds, serialized }
   return _fundsCache
 }
 
-const client = new Anthropic()
-
-const MODEL = "claude-haiku-4-5" as const
+const OPENROUTER_BASE_URL = "https://openrouter.ai/api/v1"
+const MODEL = "openai/gpt-oss-120b:free" as const
 
 const SYSTEM_BASE = `You are PatronAtlas, an AI prospect researcher for Australian Deductible Gift Recipient Item 1 (DGR1) charities.
 
@@ -93,42 +84,46 @@ Rules.
 
 8. Return up to 10 matches. Fewer if there genuinely aren't 10 reasonable candidates in the dataset.`
 
-const matchSchema = {
-  type: "object",
-  properties: {
-    matches: {
-      type: "array",
-      items: {
-        type: "object",
-        properties: {
-          abn: { type: "string" },
-          fundName: { type: "string" },
-          fitScore: { type: "integer", minimum: 1, maximum: 10 },
-          fitReasoning: { type: "string" },
-          applicationStatus: {
-            type: "string",
-            enum: ["accepts", "unsolicited", "closed", "unknown"],
+const matchJsonSchema = {
+  name: "FundMatches",
+  strict: true,
+  schema: {
+    type: "object",
+    properties: {
+      matches: {
+        type: "array",
+        items: {
+          type: "object",
+          properties: {
+            abn: { type: "string" },
+            fundName: { type: "string" },
+            fitScore: { type: "integer", minimum: 1, maximum: 10 },
+            fitReasoning: { type: "string" },
+            applicationStatus: {
+              type: "string",
+              enum: ["accepts", "unsolicited", "closed", "unknown"],
+            },
+            sourceUrl: { type: "string" },
+            draftEmailSubject: { type: "string" },
+            draftEmailBody: { type: "string" },
           },
-          sourceUrl: { type: "string" },
-          draftEmailSubject: { type: "string" },
-          draftEmailBody: { type: "string" },
+          required: [
+            "abn",
+            "fundName",
+            "fitScore",
+            "fitReasoning",
+            "applicationStatus",
+            "sourceUrl",
+            "draftEmailSubject",
+            "draftEmailBody",
+          ],
+          additionalProperties: false,
         },
-        required: [
-          "abn",
-          "fundName",
-          "fitScore",
-          "fitReasoning",
-          "applicationStatus",
-          "sourceUrl",
-          "draftEmailSubject",
-          "draftEmailBody",
-        ],
-        additionalProperties: false,
       },
     },
+    required: ["matches"],
+    additionalProperties: false,
   },
-  required: ["matches"],
-  additionalProperties: false,
 } as const
 
 export const MatchInputSchema = z.object({
@@ -155,16 +150,19 @@ export type FundMatch = {
 export type MatchResult = {
   matches: FundMatch[]
   usage: {
-    cacheCreate: number
-    cacheRead: number
-    inputTokens: number
-    outputTokens: number
+    promptTokens: number
+    completionTokens: number
+    totalTokens: number
     estimatedCostAUD: number
+    model: string
   }
 }
 
-function buildUserPrompt(input: MatchInput): string {
+function buildUserPrompt(input: MatchInput, fundsSerialized: string): string {
   const lines = [
+    "Dataset of available funds (JSON-wrapped):",
+    fundsSerialized,
+    "",
     `Charity name: ${input.charity}`,
     `Operating region: ${input.region}`,
     `Ask amount: ${input.ask}`,
@@ -182,35 +180,13 @@ function buildUserPrompt(input: MatchInput): string {
   return lines.join("\n")
 }
 
-const HAIKU_INPUT_USD_PER_M = 1.0
-const HAIKU_OUTPUT_USD_PER_M = 5.0
-const FX_USD_TO_AUD = 1.55
-
-function estimateCostAUD(usage: {
-  cache_creation_input_tokens: number
-  cache_read_input_tokens: number
-  input_tokens: number
-  output_tokens: number
-}): number {
-  const cacheWriteCost =
-    (usage.cache_creation_input_tokens * HAIKU_INPUT_USD_PER_M * 1.25) / 1_000_000
-  const cacheReadCost =
-    (usage.cache_read_input_tokens * HAIKU_INPUT_USD_PER_M * 0.1) / 1_000_000
-  const uncachedInputCost =
-    (usage.input_tokens * HAIKU_INPUT_USD_PER_M) / 1_000_000
-  const outputCost =
-    (usage.output_tokens * HAIKU_OUTPUT_USD_PER_M) / 1_000_000
-  const usd = cacheWriteCost + cacheReadCost + uncachedInputCost + outputCost
-  return Math.round(usd * FX_USD_TO_AUD * 10000) / 10000
-}
-
 /**
  * Match an Australian DGR1 charity description against the cached ACNC
  * dataset. Returns up to 10 ranked matches with reasoning, source URLs,
  * and draft outreach emails.
  *
  * Throws if the dataset is empty (run scripts/fetch-acnc.mjs first) or
- * if the Anthropic API call fails.
+ * if the OpenRouter API call fails.
  */
 export async function matchFunds(input: MatchInput): Promise<MatchResult> {
   const parsed = MatchInputSchema.parse(input)
@@ -222,46 +198,65 @@ export async function matchFunds(input: MatchInput): Promise<MatchResult> {
     )
   }
 
-  const response = await client.messages.create({
-    model: MODEL,
-    max_tokens: 4000,
-    system: [
-      { type: "text", text: SYSTEM_BASE },
-      {
-        type: "text",
-        text: serialized,
-        cache_control: { type: "ephemeral" },
-      },
-    ],
-    messages: [{ role: "user", content: buildUserPrompt(parsed) }],
-    output_config: {
-      format: {
-        type: "json_schema",
-        schema: matchSchema,
-      },
-    },
-  })
-
-  const textBlock = response.content.find((b) => b.type === "text")
-  if (!textBlock || textBlock.type !== "text") {
-    throw new Error("Claude returned no text block")
+  const apiKey = process.env.OPENROUTER_API_KEY
+  if (!apiKey) {
+    throw new Error("OPENROUTER_API_KEY is not configured. Set it as a Worker secret.")
   }
 
-  const data = JSON.parse(textBlock.text) as { matches: FundMatch[] }
+  const response = await fetch(`${OPENROUTER_BASE_URL}/chat/completions`, {
+    method: "POST",
+    headers: {
+      Authorization: `Bearer ${apiKey}`,
+      "Content-Type": "application/json",
+      // OpenRouter ranking headers - help track usage on their dashboard
+      "HTTP-Referer": "https://patronatlas.com.au",
+      "X-Title": "PatronAtlas",
+    },
+    body: JSON.stringify({
+      model: MODEL,
+      messages: [
+        { role: "system", content: SYSTEM_BASE },
+        { role: "user", content: buildUserPrompt(parsed, serialized) },
+      ],
+      response_format: {
+        type: "json_schema",
+        json_schema: matchJsonSchema,
+      },
+      max_tokens: 4000,
+      temperature: 0.2,
+    }),
+  })
+
+  if (!response.ok) {
+    const text = await response.text().catch(() => "")
+    throw new Error(`OpenRouter ${response.status}: ${text.slice(0, 500)}`)
+  }
+
+  const result = (await response.json()) as {
+    choices?: { message?: { content?: string } }[]
+    usage?: { prompt_tokens?: number; completion_tokens?: number; total_tokens?: number }
+    error?: { message?: string }
+  }
+
+  if (result.error) {
+    throw new Error(`OpenRouter error: ${result.error.message ?? "unknown"}`)
+  }
+
+  const content = result.choices?.[0]?.message?.content
+  if (!content) {
+    throw new Error("OpenRouter returned no content")
+  }
+
+  const data = JSON.parse(content) as { matches: FundMatch[] }
 
   return {
     matches: data.matches,
     usage: {
-      cacheCreate: response.usage.cache_creation_input_tokens ?? 0,
-      cacheRead: response.usage.cache_read_input_tokens ?? 0,
-      inputTokens: response.usage.input_tokens,
-      outputTokens: response.usage.output_tokens,
-      estimatedCostAUD: estimateCostAUD({
-        cache_creation_input_tokens: response.usage.cache_creation_input_tokens ?? 0,
-        cache_read_input_tokens: response.usage.cache_read_input_tokens ?? 0,
-        input_tokens: response.usage.input_tokens,
-        output_tokens: response.usage.output_tokens,
-      }),
+      promptTokens: result.usage?.prompt_tokens ?? 0,
+      completionTokens: result.usage?.completion_tokens ?? 0,
+      totalTokens: result.usage?.total_tokens ?? 0,
+      estimatedCostAUD: 0, // free model; revisit if MODEL switches to paid
+      model: MODEL,
     },
   }
 }
