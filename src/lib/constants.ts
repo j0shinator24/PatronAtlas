@@ -9,7 +9,7 @@ export const BUSINESS = {
   location: "Australia",
   tagline: "An atlas of Australia's philanthropic funders.",
   description:
-    "AI-powered prospect research for Australian DGR1 charities. Find Private and Public Ancillary Funds that fit your cause, with reasoning cited to public ACNC, ABR and ASIC data.",
+    "AI-powered prospect research for Australian DGR1 charities. Find PAFs and PuAFs that fit your cause, with reasoning cited to ACNC, ABR and ASIC data.",
 } as const
 
 export const PRODUCT = {

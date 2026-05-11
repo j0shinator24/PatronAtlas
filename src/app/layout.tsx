@@ -93,6 +93,7 @@ const websiteJsonLd = {
   url: BASE_URL,
   name: BUSINESS.name,
   publisher: { "@id": `${BASE_URL}/#organization` },
+  inLanguage: "en-AU",
 }
 
 export default function RootLayout({
