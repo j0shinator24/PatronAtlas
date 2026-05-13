@@ -46,7 +46,6 @@ next-env.d.ts
 
 .vercel
 
-# cloudflare / opennext
-.open-next/
-.wrangler/
-cloudflare-env.d.ts
+# Data pipeline intermediates (rebuild via scripts/enrich-from-abr.mjs)
+/data/abr-cache/
+/data/funds-rejected.json

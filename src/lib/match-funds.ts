@@ -28,6 +28,16 @@ import { readFile } from "node:fs/promises"
 import path from "node:path"
 import { z } from "zod"
 
+export type AbrEnrichment = {
+  legalName: string | null
+  entityType: string | null
+  entityStatus: string | null
+  dgrEndorsed: boolean
+  dgrItem: number | null
+  dgrCategory: string | null
+  dgrStartDate: string | null
+}
+
 export type FundProfile = {
   abn: string
   name: string
@@ -39,13 +49,18 @@ export type FundProfile = {
   beneficiaries: string[]
   website: string | null
   url: string
+  abr: AbrEnrichment
 }
 
 let _fundsCache: { funds: FundProfile[]; serialized: string } | null = null
 
 async function loadFunds(): Promise<{ funds: FundProfile[]; serialized: string }> {
   if (_fundsCache) return _fundsCache
-  const filePath = path.join(process.cwd(), "data", "acnc-funds.json")
+  // v2 dataset: ABR-verified PAFs and PuAFs only (DGR Item 2 endorsed,
+  // categories "Private Ancillary Fund" or "Public Ancillary Fund").
+  // Produced by scripts/enrich-from-abr.mjs cross-referencing ACNC bulk
+  // against the public ABR lookup at https://abr.business.gov.au/ABN/View.
+  const filePath = path.join(process.cwd(), "data", "funds-enriched.json")
   const content = await readFile(filePath, "utf-8")
   const funds = JSON.parse(content) as FundProfile[]
   const serialized = `<funds>${JSON.stringify(funds)}</funds>`
@@ -62,15 +77,15 @@ Your job is to read a charity's description and return up to 10 best-fit Austral
 
 Dataset scope (be honest about this in your reasoning).
 
-The dataset is filtered from the ACNC public charity register by name pattern (matches Foundation, Trust, Fund, Ancillary, Philanthropic, Charitable, Bequest). It includes most ACNC-visible Private and Public Ancillary Funds (PAFs and PuAFs), plus broader operating foundations and trusts that are not strictly ancillary funds. The dataset does not include the half of PAFs that elect not to register with ACNC.
+The dataset is the authoritative subset of Australian Private and Public Ancillary Funds visible on the ACNC public register and verified against the Australian Business Register as DGR Item 2 endorsed under Subdivision 30-B of the Income Tax Assessment Act 1997. Every entry has been cross-referenced; the abr.dgrCategory field is either "Private Ancillary Fund" or "Public Ancillary Fund". This is a strict subset of the ATO's reported 2,196 total PAFs in Australia (Taxation Statistics 2022-23), bounded by ACNC visibility.
 
-Each entry has: name, ABN, registered state, postcode, charity size, registration date, ACNC charitable-purpose subtypes (the booleans the charity ticked: education, health, social welfare, etc.), beneficiary categories (children, aged, disability, etc.), and website if any. The dataset does NOT contain stated giving focus, recent gifts, director information, or application process details.
+Each entry has: name, ABN, registered state, postcode, charity size, registration date, ACNC charitable-purpose subtypes (the booleans the charity ticked: education, health, social welfare, etc.), beneficiary categories (children, aged, disability, etc.), website if any, and an abr object with the verified legal name (often "The Trustee for X" reflecting trust structure), DGR category (PAF vs PuAF), and DGR endorsement start date. The dataset does NOT contain stated giving focus, recent gifts, director information, or application process details.
 
 Rules.
 
 1. Score each fund on three dimensions: cause fit (do the fund's charitable-purpose subtypes overlap with the charity's stated work), region fit (does the fund's registered state align with the charity's operating region, or do they operate nationally), and scale fit (does the fund's charity size category suggest it could give cheques in the requested ask range).
 
-2. Be candid about confidence. Most matches will be weak signal because the ACNC subtypes are broad. Say so explicitly in fitReasoning when the only basis is broad subtype overlap. If the entry is named "Foundation" or "Trust" but might not be an ancillary fund, note that the charity should verify the fund's giving structure on the ACNC record.
+2. Be candid about confidence. Most matches will be moderate signal because the ACNC subtypes are broad. Say so explicitly in fitReasoning when the only basis is broad subtype overlap. PAFs are typically narrower funders (family-controlled, narrower stated interests) while PuAFs often run open community grant rounds. Note this distinction in your reasoning when relevant.
 
 3. NEVER invent giving history. NEVER claim a fund has given to a specific cause unless that fact is in the dataset (it almost certainly is not). If you don't know, say so.
 
