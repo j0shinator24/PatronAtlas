@@ -66,10 +66,32 @@ function loadFunds(): { funds: FundProfile[] } {
 }
 
 // The full dataset (~1.25 MB / ~315K tokens) exceeds gpt-oss-120b's
-// 128K context window. Pre-filter by region and prioritise by size
-// to bring the per-query context under cap. Hard cap chosen to leave
-// headroom for system prompt + user prompt + response tokens.
-const PREFILTER_HARD_CAP = 1000
+// 128K context window. Pre-filter by region, then serialise a COMPACT
+// record per fund (only fields the model scores on). gpt-oss reasoning
+// tokens are charged against the same budget, so we keep input well
+// under ~50K tokens: a 1000-cap of full records returned empty content
+// (model spent its budget reasoning over a 117K-token prompt). Compact
+// records run ~150 chars each; 600 of them is ~90KB / ~23K tokens.
+const PREFILTER_HARD_CAP = 600
+
+// Strip to the fields the model needs for cause/region/scale scoring +
+// citation. Drops postcode, registrationDate, website, abr.legalName,
+// abr.entityType/Status, abr.dgrStartDate, abr.dgrEndorsed, abr.dgrItem.
+function compactForPrompt(f: FundProfile) {
+  // Some ACNC rows have no Charity_Legal_Name. Fall back to the ABR
+  // legal name ("The Trustee for X") so no result card is ever nameless.
+  const name = f.name?.trim() || f.abr?.legalName?.trim() || `Ancillary Fund (ABN ${f.abn})`
+  return {
+    abn: f.abn,
+    name,
+    state: f.state,
+    size: f.size,
+    subtypes: f.subtypes,
+    beneficiaries: f.beneficiaries,
+    category: f.abr?.dgrCategory ?? null,
+    url: f.url,
+  }
+}
 
 const SIZE_RANK: Record<string, number> = {
   Small: 0,
@@ -104,7 +126,12 @@ function prefilterFunds(funds: FundProfile[], region: string): FundProfile[] {
 }
 
 const OPENROUTER_BASE_URL = "https://openrouter.ai/api/v1"
-const MODEL = "openai/gpt-oss-120b:free" as const
+// Benchmarked 2026-05-16 against gpt-oss-120b, glm-4.5-air, hermes-3-405b,
+// qwen3-next: deepseek-v4-flash was the ONLY free model that returned valid
+// schema-conformant content, with zero hallucinated ABNs and 1M context.
+// The others returned empty content (gpt-oss/glm), provider errors
+// (hermes), or rate-limited (qwen). See scripts/benchmark-models.mjs.
+const MODEL = "deepseek/deepseek-v4-flash:free" as const
 
 const SYSTEM_BASE = `You are PatronAtlas, an AI prospect researcher for Australian Deductible Gift Recipient Item 1 (DGR1) charities.
 
@@ -114,7 +141,7 @@ Dataset scope (be honest about this in your reasoning).
 
 The dataset is every Australian Private and Public Ancillary Fund visible on the ACNC public register, each verified against the Australian Business Register as DGR Item 2 endorsed under Subdivision 30-B of the Income Tax Assessment Act 1997. The full scan covers 2,688 funders (1,587 PAFs + 1,101 PuAFs). The abr.dgrCategory field is either "Private Ancillary Fund" or "Public Ancillary Fund". For a given query you are shown a region-prefiltered slice of this dataset (the funds element's count and total attributes tell you how many of the full set you can see); reason only over what you are shown and do not speculate about funds outside the slice.
 
-Each entry has: name, ABN, registered state, postcode, charity size, registration date, ACNC charitable-purpose subtypes (the booleans the charity ticked: education, health, social welfare, etc.), beneficiary categories (children, aged, disability, etc.), website if any, and an abr object with the verified legal name (often "The Trustee for X" reflecting trust structure), DGR category (PAF vs PuAF), and DGR endorsement start date. The dataset does NOT contain stated giving focus, recent gifts, director information, or application process details.
+Each entry is a compact record with: abn, name, state (registered state, or null = nationally registered / not state-bound), size (ACNC charity size band), subtypes (ACNC charitable-purpose tags the fund ticked: education, health, social welfare, etc.), beneficiaries (children, aged, disability, etc.), category ("Private Ancillary Fund" or "Public Ancillary Fund"), and url (the fund's ACNC record). The dataset does NOT contain stated giving focus, recent gifts, director information, postcode, or application process details. Do not invent any field not present in the record.
 
 Rules.
 
@@ -248,9 +275,11 @@ export async function matchFunds(input: MatchInput): Promise<MatchResult> {
     )
   }
 
-  // Pre-filter so the prompt context fits the model's 128K window.
+  // Pre-filter + compact so the prompt context (incl. gpt-oss reasoning
+  // tokens) stays well under the 128K window.
   const candidates = prefilterFunds(funds, parsed.region)
-  const serialized = `<funds count="${candidates.length}" total="${funds.length}">${JSON.stringify(candidates)}</funds>`
+  const compact = candidates.map(compactForPrompt)
+  const serialized = `<funds count="${compact.length}" total="${funds.length}">${JSON.stringify(compact)}</funds>`
 
   const apiKey = process.env.OPENROUTER_API_KEY
   if (!apiKey) {
@@ -303,8 +332,19 @@ export async function matchFunds(input: MatchInput): Promise<MatchResult> {
 
   const data = JSON.parse(content) as { matches: FundMatch[] }
 
+  // Dedup by ABN: free models occasionally repeat a fund (deepseek-v4-flash
+  // returned one dupe in benchmarking). Keep first occurrence, preserve order.
+  const seenAbns = new Set<string>()
+  const deduped: FundMatch[] = []
+  for (const m of data.matches ?? []) {
+    if (!m || typeof m.abn !== "string") continue
+    if (seenAbns.has(m.abn)) continue
+    seenAbns.add(m.abn)
+    deduped.push(m)
+  }
+
   return {
-    matches: data.matches,
+    matches: deduped,
     usage: {
       promptTokens: result.usage?.prompt_tokens ?? 0,
       completionTokens: result.usage?.completion_tokens ?? 0,

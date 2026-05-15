@@ -52,3 +52,6 @@ next-env.d.ts
 /data/funds-enriched-old287.json
 /data/funds-enriched-progress.json
 /data/acnc-bulk.csv
+
+# Model benchmark artifacts (regenerate via scripts/benchmark-models.mjs)
+/data/benchmark/
