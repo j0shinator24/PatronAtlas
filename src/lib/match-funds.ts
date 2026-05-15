@@ -24,9 +24,12 @@
  * to actual ancillary funds only.
  */
 
-import { readFile } from "node:fs/promises"
-import path from "node:path"
 import { z } from "zod"
+// Static import so the dataset is bundled into the Cloudflare Worker.
+// Workers have no filesystem; fs.readFile is unimplemented under unenv.
+// webpack inlines this JSON at build time (gzips well; non-sensitive
+// public-register data).
+import fundsData from "../../data/funds-enriched.json"
 
 export type AbrEnrichment = {
   legalName: string | null
@@ -52,19 +55,14 @@ export type FundProfile = {
   abr: AbrEnrichment
 }
 
-let _fundsCache: { funds: FundProfile[] } | null = null
+// v3 dataset: full ACNC vs ABR scan. Every ACNC-visible Australian
+// entity classified as DGR Item 2 Private Ancillary Fund or Public
+// Ancillary Fund. 2,688 funders (1,587 PAFs + 1,101 PuAFs).
+// Produced by scripts/enrich-full-acnc.mjs. Bundled at build time.
+const _funds = fundsData as unknown as FundProfile[]
 
-async function loadFunds(): Promise<{ funds: FundProfile[] }> {
-  if (_fundsCache) return _fundsCache
-  // v3 dataset: full ACNC vs ABR scan. Every ACNC-visible Australian
-  // entity classified as DGR Item 2 Private Ancillary Fund or Public
-  // Ancillary Fund. 2,688 funders (1,587 PAFs + 1,101 PuAFs).
-  // Produced by scripts/enrich-full-acnc.mjs.
-  const filePath = path.join(process.cwd(), "data", "funds-enriched.json")
-  const content = await readFile(filePath, "utf-8")
-  const funds = JSON.parse(content) as FundProfile[]
-  _fundsCache = { funds }
-  return _fundsCache
+function loadFunds(): { funds: FundProfile[] } {
+  return { funds: _funds }
 }
 
 // The full dataset (~1.25 MB / ~315K tokens) exceeds gpt-oss-120b's
@@ -242,7 +240,7 @@ function buildUserPrompt(input: MatchInput, fundsSerialized: string): string {
  */
 export async function matchFunds(input: MatchInput): Promise<MatchResult> {
   const parsed = MatchInputSchema.parse(input)
-  const { funds } = await loadFunds()
+  const { funds } = loadFunds()
 
   if (funds.length === 0) {
     throw new Error(
