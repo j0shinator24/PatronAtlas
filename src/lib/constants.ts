@@ -18,7 +18,7 @@ export const PRODUCT = {
   earlyBirdPrice: 190,
   earlyBirdCap: 25,
   paidCurrency: "AUD",
-  fundCount: "1,500+",
+  fundCount: "2,688",
   launchTiming: "mid-2026",
   registers: [
     "ACNC Charity Register",

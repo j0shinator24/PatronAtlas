@@ -52,20 +52,57 @@ export type FundProfile = {
   abr: AbrEnrichment
 }
 
-let _fundsCache: { funds: FundProfile[]; serialized: string } | null = null
+let _fundsCache: { funds: FundProfile[] } | null = null
 
-async function loadFunds(): Promise<{ funds: FundProfile[]; serialized: string }> {
+async function loadFunds(): Promise<{ funds: FundProfile[] }> {
   if (_fundsCache) return _fundsCache
-  // v2 dataset: ABR-verified PAFs and PuAFs only (DGR Item 2 endorsed,
-  // categories "Private Ancillary Fund" or "Public Ancillary Fund").
-  // Produced by scripts/enrich-from-abr.mjs cross-referencing ACNC bulk
-  // against the public ABR lookup at https://abr.business.gov.au/ABN/View.
+  // v3 dataset: full ACNC vs ABR scan. Every ACNC-visible Australian
+  // entity classified as DGR Item 2 Private Ancillary Fund or Public
+  // Ancillary Fund. 2,688 funders (1,587 PAFs + 1,101 PuAFs).
+  // Produced by scripts/enrich-full-acnc.mjs.
   const filePath = path.join(process.cwd(), "data", "funds-enriched.json")
   const content = await readFile(filePath, "utf-8")
   const funds = JSON.parse(content) as FundProfile[]
-  const serialized = `<funds>${JSON.stringify(funds)}</funds>`
-  _fundsCache = { funds, serialized }
+  _fundsCache = { funds }
   return _fundsCache
+}
+
+// The full dataset (~1.25 MB / ~315K tokens) exceeds gpt-oss-120b's
+// 128K context window. Pre-filter by region and prioritise by size
+// to bring the per-query context under cap. Hard cap chosen to leave
+// headroom for system prompt + user prompt + response tokens.
+const PREFILTER_HARD_CAP = 1000
+
+const SIZE_RANK: Record<string, number> = {
+  Small: 0,
+  Medium: 1,
+  Large: 2,
+  "Extra Large": 3,
+}
+
+function prefilterFunds(funds: FundProfile[], region: string): FundProfile[] {
+  let pool = funds
+
+  // Region filter: keep state-matched + national (state === null)
+  // "australia-wide" and "overseas" select everything.
+  if (region !== "australia-wide" && region !== "overseas") {
+    pool = funds.filter((f) => f.state === region || f.state === null)
+  }
+
+  if (pool.length <= PREFILTER_HARD_CAP) return pool
+
+  // Prioritise: explicit state match > national > out-of-state.
+  // Within tier: prefer Small/Medium (PAFs typically distribute in
+  // user-relevant cheque sizes).
+  const sorted = [...pool].sort((a, b) => {
+    const aRegion = a.state === region ? 0 : a.state === null ? 1 : 2
+    const bRegion = b.state === region ? 0 : b.state === null ? 1 : 2
+    if (aRegion !== bRegion) return aRegion - bRegion
+    const aSize = SIZE_RANK[a.size ?? ""] ?? 4
+    const bSize = SIZE_RANK[b.size ?? ""] ?? 4
+    return aSize - bSize
+  })
+  return sorted.slice(0, PREFILTER_HARD_CAP)
 }
 
 const OPENROUTER_BASE_URL = "https://openrouter.ai/api/v1"
@@ -77,7 +114,7 @@ Your job is to read a charity's description and return up to 10 best-fit Austral
 
 Dataset scope (be honest about this in your reasoning).
 
-The dataset is the authoritative subset of Australian Private and Public Ancillary Funds visible on the ACNC public register and verified against the Australian Business Register as DGR Item 2 endorsed under Subdivision 30-B of the Income Tax Assessment Act 1997. Every entry has been cross-referenced; the abr.dgrCategory field is either "Private Ancillary Fund" or "Public Ancillary Fund". This is a strict subset of the ATO's reported 2,196 total PAFs in Australia (Taxation Statistics 2022-23), bounded by ACNC visibility.
+The dataset is every Australian Private and Public Ancillary Fund visible on the ACNC public register, each verified against the Australian Business Register as DGR Item 2 endorsed under Subdivision 30-B of the Income Tax Assessment Act 1997. The full scan covers 2,688 funders (1,587 PAFs + 1,101 PuAFs). The abr.dgrCategory field is either "Private Ancillary Fund" or "Public Ancillary Fund". For a given query you are shown a region-prefiltered slice of this dataset (the funds element's count and total attributes tell you how many of the full set you can see); reason only over what you are shown and do not speculate about funds outside the slice.
 
 Each entry has: name, ABN, registered state, postcode, charity size, registration date, ACNC charitable-purpose subtypes (the booleans the charity ticked: education, health, social welfare, etc.), beneficiary categories (children, aged, disability, etc.), website if any, and an abr object with the verified legal name (often "The Trustee for X" reflecting trust structure), DGR category (PAF vs PuAF), and DGR endorsement start date. The dataset does NOT contain stated giving focus, recent gifts, director information, or application process details.
 
@@ -205,13 +242,17 @@ function buildUserPrompt(input: MatchInput, fundsSerialized: string): string {
  */
 export async function matchFunds(input: MatchInput): Promise<MatchResult> {
   const parsed = MatchInputSchema.parse(input)
-  const { funds, serialized } = await loadFunds()
+  const { funds } = await loadFunds()
 
   if (funds.length === 0) {
     throw new Error(
-      "ACNC dataset is empty. Run `node scripts/fetch-acnc.mjs` to populate data/acnc-funds.json before calling matchFunds()."
+      "ACNC dataset is empty. Run `node scripts/enrich-full-acnc.mjs` to populate data/funds-enriched.json before calling matchFunds()."
     )
   }
+
+  // Pre-filter so the prompt context fits the model's 128K window.
+  const candidates = prefilterFunds(funds, parsed.region)
+  const serialized = `<funds count="${candidates.length}" total="${funds.length}">${JSON.stringify(candidates)}</funds>`
 
   const apiKey = process.env.OPENROUTER_API_KEY
   if (!apiKey) {

@@ -46,6 +46,9 @@ next-env.d.ts
 
 .vercel
 
-# Data pipeline intermediates (rebuild via scripts/enrich-from-abr.mjs)
+# Data pipeline intermediates (rebuild via scripts/enrich-full-acnc.mjs)
 /data/abr-cache/
 /data/funds-rejected.json
+/data/funds-enriched-old287.json
+/data/funds-enriched-progress.json
+/data/acnc-bulk.csv
