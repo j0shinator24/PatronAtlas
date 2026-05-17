@@ -15,8 +15,6 @@ export const BUSINESS = {
 export const PRODUCT = {
   name: "PatronAtlas v1",
   paidPriceAnnual: 290,
-  earlyBirdPrice: 190,
-  earlyBirdCap: 25,
   paidCurrency: "AUD",
   fundCount: "2,688",
   launchTiming: "mid-2026",
@@ -68,7 +66,7 @@ export const COMPARE_ROWS: readonly CompareRow[] = [
   {
     label: "Annual price",
     cells: [
-      { kind: "text", value: `A$${PRODUCT.paidPriceAnnual}/yr Pro; early bird A$${PRODUCT.earlyBirdPrice} first year` },
+      { kind: "text", value: `Matching tool free now; Pro planned around A$${PRODUCT.paidPriceAnnual}/yr (not yet live)` },
       { kind: "text", value: "A$2,699+GST single-user; A$3,799+GST multi-user (up to 6)" },
       { kind: "text", value: "A$480 to A$990 ex-tax/yr, revenue-tiered" },
       { kind: "text", value: "A$995+GST/yr for nonprofit organisations" },
@@ -98,7 +96,7 @@ export const COMPARE_ROWS: readonly CompareRow[] = [
   {
     label: "AI matching to your cause",
     cells: [
-      { kind: "tick", note: "Claude reads ACNC + ranks by overlap" },
+      { kind: "tick", note: "AI reads ACNC + ranks by overlap" },
       { kind: "cross", note: "Not advertised" },
       { kind: "cross", note: "Not advertised" },
       { kind: "cross", note: "Not advertised" },

@@ -27,7 +27,9 @@ export default function PrivacyPage() {
     <article className="mx-auto max-w-3xl px-4 md:px-8 py-16 md:py-24 prose prose-neutral dark:prose-invert">
       <h1 className="text-3xl md:text-4xl font-bold tracking-tight mb-6">Privacy</h1>
       <p className="text-sm text-muted-foreground mb-10">
-        Last updated: 7 May 2026. This page describes what we collect when you interact
+        Last updated: 17 May 2026. PatronAtlas is operated by Joshua Libeau Mowat
+        (sole trader), ABN {BUSINESS.abn}, Queensland, Australia, who is the APP entity
+        responsible for this site. This page describes what we collect when you interact
         with patronatlas.com.au, why, and how to access or correct your record. We comply
         with the Privacy Act 1988 (Cth) and the Australian Privacy Principles.
       </p>
@@ -48,7 +50,7 @@ export default function PrivacyPage() {
           <li>To run your query against the public ACNC dataset and return matched funders.</li>
           <li>To email you when Pro is ready to test, and to send launch news only.</li>
           <li>To shape what gets built. Your description of where you currently look for funders is direct product input.</li>
-          <li>We do not retarget you with ads. We do not place advertising pixels. We do not sell your record. We do not use your data to train AI models.</li>
+          <li>We do not retarget you with ads. We do not place advertising pixels. We do not sell your record. We do not share it for marketing. The AI step is described below, including the limits of what we can guarantee about it.</li>
         </ul>
       </section>
 
@@ -58,14 +60,15 @@ export default function PrivacyPage() {
           Joshua, the founder. Sub-processors that strictly handle the data on our behalf:
         </p>
         <ul className="text-sm leading-relaxed text-muted-foreground space-y-1 ml-5 list-disc">
-          <li><strong>Anthropic (Claude API).</strong> Your charity description is sent to Claude for the matching step. Anthropic&apos;s API for paid tier customers does not train on customer data by default. See Anthropic&apos;s commercial terms.</li>
-          <li><strong>Resend.</strong> Transactional email delivery, US-based. Processes your email address and the contents of any email we send you.</li>
+          <li><strong>OpenRouter (United States) and the DeepSeek model.</strong> When you use the matching tool, the charity description and details you enter are transmitted to OpenRouter Inc in the United States and processed by the DeepSeek model to generate your funder matches. This is an overseas disclosure under APP 8. By submitting the tool you consent to this overseas disclosure (APP 8.2(b)). We use a free model tier, and we cannot guarantee the overseas recipients are bound by the Australian Privacy Principles or that your input will not be used to improve their models. <strong>Do not paste confidential, sensitive, or unpublished information into the tool.</strong> Use only information your charity is comfortable sharing publicly.</li>
+          <li><strong>Resend.</strong> Transactional email delivery, US-based. Processes your email address and the contents of any email we send you. Overseas disclosure under APP 8.</li>
           <li><strong>Supabase.</strong> Database hosting, AU region. Processes the full waitlist and tool-query record.</li>
-          <li><strong>Cloudflare.</strong> CDN and DNS. Sees IP address and request metadata for caching and security only.</li>
+          <li><strong>Cloudflare.</strong> Hosting, CDN and DNS. Sees IP address and request metadata for serving the site and security.</li>
         </ul>
         <p className="text-sm leading-relaxed text-muted-foreground mt-3">
           We do not share your record with any third party for marketing, sale, or
-          partnership purposes.
+          partnership purposes. The overseas disclosures above are operational only, to run
+          the tool and send the emails you ask for.
         </p>
       </section>
 

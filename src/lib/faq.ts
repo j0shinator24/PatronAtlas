@@ -18,7 +18,7 @@ export const faqItems = [
   },
   {
     q: "Where does PatronAtlas get its data?",
-    a: "Four public Australian registers. The ACNC Charity Register, the Australian Business Register (DGR endorsement type), ASIC Connect (corporate trustee), and the ATO's official DGR list. We cross-reference these on ABN, then enrich each fund with whatever the most recent annual report and recent news say. No scraping of subscription databases. No broker shortcuts.",
+    a: "Public Australian registers. The ACNC Charity Register for charitable-purpose, state and size data, cross-referenced on ABN against the Australian Business Register to verify DGR Item 2 (ancillary fund) endorsement. We do not scrape subscription databases. We do not broker introductions.",
   },
   {
     q: "Does my charity need to be a DGR1 to use PatronAtlas?",
@@ -26,6 +26,6 @@ export const faqItems = [
   },
   {
     q: "How accurate is the AI's fund matching?",
-    a: "Claude reads what the funds have publicly said about their own giving and matches that against your charity description. The matches are good when funds publish clear giving statements. They're weaker when funds publish nothing. Every recommendation includes the public source so you can verify before you reach out. PatronAtlas does not invent giving claims. If a fund's giving history isn't publicly documented, the AI says so. We are upfront about hallucination risk. That's why every claim has a source link.",
+    a: "The AI ranks each fund by how well its ACNC charitable-purpose tags, registered state, and size band overlap your charity's cause, region, and ask. It does not have funds' grant history, amounts, or application processes, and it does not invent them. Treat the shortlist as a starting point to verify, not a prediction of success. Every match links to the fund's public ACNC record so you can check it before you reach out. We are upfront about AI error: verify each one against the source.",
   },
 ] as const

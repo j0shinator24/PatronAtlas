@@ -27,17 +27,17 @@ export default function TermsPage() {
     <article className="mx-auto max-w-3xl px-4 md:px-8 py-16 md:py-24 prose prose-neutral dark:prose-invert">
       <h1 className="text-3xl md:text-4xl font-bold tracking-tight mb-6">Terms</h1>
       <p className="text-sm text-muted-foreground mb-10">
-        Last updated: 7 May 2026. These terms apply to use of patronatlas.com.au and the
-        waitlist for the PatronAtlas Pro tier launching mid-2026.
+        Last updated: 17 May 2026. These terms apply to use of patronatlas.com.au,
+        including the free matching tool and the waitlist for the planned Pro tier.
       </p>
 
       <section className="mb-10">
         <h2 className="text-xl font-semibold mb-3">1. Entity disclosure</h2>
         <p className="text-sm leading-relaxed text-muted-foreground">
-          PatronAtlas is a customer-facing brand operated by {BUSINESS.legalName} (ABN
-          pending registration), a Queensland company. PatronAtlas is a separate venture
-          from Waylight Plan Management and Waylight Data, both also run under the same
-          parent entity.
+          PatronAtlas is a customer-facing brand operated by {BUSINESS.legalName} (sole
+          trader), ABN {BUSINESS.abn}, based in Queensland, Australia. PatronAtlas is a
+          separate venture from Waylight Plan Management and Waylight Data, run by the
+          same operator.
         </p>
       </section>
 
@@ -58,31 +58,39 @@ export default function TermsPage() {
         <p className="text-sm leading-relaxed text-muted-foreground">
           Waitlist signups capture your charity name, your name, your role, your email,
           and one sentence about where you currently look for funders. We use these to
-          send you launch news and to shape what gets built. The /tool route additionally
-          captures your charity description, region, and ask amount, used only to match
-          you against the dataset when Pro launches.
+          send you product news and to shape what gets built. The free matching tool
+          processes your charity description, region, and ask amount to generate matches
+          in real time and logs the description to improve matching.
         </p>
       </section>
 
       <section className="mb-10">
-        <h2 className="text-xl font-semibold mb-3">4. Pro tier (when launched)</h2>
+        <h2 className="text-xl font-semibold mb-3">4. Pro tier (planned)</h2>
         <p className="text-sm leading-relaxed text-muted-foreground">
-          Pro launches mid-2026 at $290 per year per organisation. The first 25 buyers
-          lock in $190 for year one. Payment is annual via Stripe. A separate Pro-tier
-          terms addendum will be issued at launch. These current terms govern only
-          waitlist and pre-launch usage of patronatlas.com.au.
+          A paid Pro tier is planned, with a current target of mid-2026 and an intended
+          price around $290 per year per organisation. Timing, price, and any
+          founding-member pricing are current intentions, not guarantees, and may change.
+          No payment is taken before launch. A separate Pro-tier terms addendum will be
+          issued at launch. These current terms govern the free tool and pre-launch usage
+          of patronatlas.com.au.
         </p>
       </section>
 
       <section className="mb-10">
         <h2 className="text-xl font-semibold mb-3">5. Accuracy disclaimer</h2>
         <p className="text-sm leading-relaxed text-muted-foreground">
-          The AI compares your charity description against publicly-stated giving
-          interests. Matches are good when funds publish clear giving statements and
-          weaker when funds publish nothing. Every recommendation includes a public source
-          link so you can verify before reaching out. PatronAtlas does not invent giving
-          claims. Australian Consumer Law non-excludable rights stand regardless of these
-          terms.
+          The AI compares your charity description against the public ACNC
+          charitable-purpose subtypes, registered state, and size band of each fund. It
+          does not have funds&apos; giving history, grant amounts, director information, or
+          application processes, and it does not invent them. Matches are a starting
+          shortlist to verify, not advice or a prediction of success. Every recommendation
+          includes a public source link so you can check it before reaching out. Draft
+          outreach emails are starting templates only. You are the sender and are solely
+          responsible for the content and accuracy of anything you send. To the extent
+          permitted by law, and except for the non-excludable guarantees under the
+          Australian Consumer Law (which stand regardless of these terms), the operator&apos;s
+          aggregate liability arising from use of the site or tool is limited to the
+          amount you have paid (which, for the free tool, is nil).
         </p>
       </section>
 

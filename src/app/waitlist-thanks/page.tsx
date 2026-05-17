@@ -24,8 +24,8 @@ export default function WaitlistThanksPage() {
           land in the next minute or two.
         </p>
         <p className="text-sm text-muted-foreground leading-relaxed mb-8">
-          Pro launches mid-2026. The first 25 buyers get the first year for $190 instead
-          of $290. You&apos;ll get the early-bird invite first.
+          Meanwhile, the matching tool is free to use now. A paid Pro tier (ongoing
+          outreach workflow) is planned for later; you&apos;ll hear about it first.
         </p>
         <div className="rounded-xl border border-border bg-card p-5 mb-8 text-left">
           <h2 className="text-base font-semibold mb-2 flex items-center gap-2">
@@ -35,15 +35,15 @@ export default function WaitlistThanksPage() {
           <ul className="space-y-2 text-sm text-muted-foreground">
             <li className="flex items-start gap-2">
               <span className="text-primary font-semibold shrink-0">1.</span>
-              <span>You&apos;ll get the first email the moment Pro is ready to test. Unlimited queries, saved lists, draft outreach emails, all of it.</span>
+              <span>Use the free matching tool now at <Link href="/tool/run" className="text-primary underline underline-offset-4">/tool/run</Link>. No signup, ranked shortlist in about a minute.</span>
             </li>
             <li className="flex items-start gap-2">
               <span className="text-primary font-semibold shrink-0">2.</span>
-              <span>If you replied to the confirmation email with what you currently struggle with in funder research, that shapes what gets built. Real charity feedback only.</span>
+              <span>You&apos;ll get an email when the paid Pro tier (ongoing outreach workflow) is ready to test.</span>
             </li>
             <li className="flex items-start gap-2">
               <span className="text-primary font-semibold shrink-0">3.</span>
-              <span>The first 25 paid buyers lock in $190 for year one. After that, $290 a year flat.</span>
+              <span>If you replied to the confirmation email with what you currently struggle with in funder research, that shapes what gets built. Real charity feedback only.</span>
             </li>
           </ul>
         </div>

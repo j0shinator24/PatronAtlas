@@ -1,5 +1,4 @@
 import type { NextConfig } from "next";
-import path from "node:path";
 import { initOpenNextCloudflareForDev } from "@opennextjs/cloudflare";
 
 const securityHeaders = [
@@ -34,14 +33,23 @@ const securityHeaders = [
 ];
 
 const nextConfig: NextConfig = {
-  turbopack: {
-    root: path.resolve(__dirname),
-  },
   async headers() {
     return [
       {
         source: "/(.*)",
         headers: securityHeaders,
+      },
+    ];
+  },
+  async redirects() {
+    return [
+      // /tool was the pre-launch waitlist/queue page. The live tool is
+      // /tool/run. Retire /tool so no stale "launches mid-2026" surface
+      // remains and there is one canonical tool path.
+      {
+        source: "/tool",
+        destination: "/tool/run",
+        permanent: true,
       },
     ];
   },

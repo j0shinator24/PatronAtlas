@@ -46,7 +46,7 @@ const serviceSchema = {
       name: "Pro tier",
       price: String(PRODUCT.paidPriceAnnual),
       priceCurrency: "AUD",
-      description: `Unlimited queries, save lists, draft email export. Annual subscription. Launches ${PRODUCT.launchTiming}.`,
+      description: `Planned annual subscription for ongoing outreach workflow. Pricing and timing are current intentions, not guarantees. The matching tool is free to use now.`,
       priceSpecification: {
         "@type": "UnitPriceSpecification",
         price: String(PRODUCT.paidPriceAnnual),
@@ -72,7 +72,7 @@ const sourceCards = [
   {
     icon: Database,
     title: "ACNC Charity Register",
-    description: "Refreshed weekly. Around 1,500 ancillary funds visible. Public, downloadable, free.",
+    description: "Public, downloadable, free. Cross-referenced against the ABR to verify DGR Item 2 status.",
   },
   {
     icon: Globe,
@@ -166,7 +166,7 @@ export default async function HomePage({
             </div>
             <div>
               <p className="text-3xl font-mono font-bold text-foreground">{PRODUCT.fundCount}</p>
-              <p className="text-sm text-muted-foreground mt-1">Profiled in PatronAtlas from ACNC public registers</p>
+              <p className="text-sm text-muted-foreground mt-1">PAFs and PuAFs profiled in PatronAtlas (ACNC + ABR verified)</p>
             </div>
           </div>
         </div>
@@ -182,14 +182,14 @@ export default async function HomePage({
             </h2>
             <p className="mt-4 text-lg text-muted-foreground leading-relaxed">
               PatronAtlas takes a description of your charity and returns a ranked
-              shortlist of Private and Public Ancillary Funds whose stated funding
-              interests overlap with your cause.
+              shortlist of Private and Public Ancillary Funds whose ACNC
+              charitable-purpose profile overlaps with your cause.
             </p>
             <p className="mt-3 text-base text-muted-foreground/85 leading-relaxed">
               You type in what your charity does, where you operate, and what you need
-              money for. Claude reads the live ACNC charity register, finds the ancillary
-              funds that have given to similar work, and ranks them by overlap. You get the
-              fund name, a short fit reasoning, links to the public source documents, and a
+              money for. The AI reads the ACNC-registered, ABR-verified ancillary funds and
+              ranks them by overlap of cause, registered state, and size band. You get the
+              fund name, a short fit reasoning, a link to the fund&apos;s public ACNC record, and a
               draft outreach email.
             </p>
           </div>
@@ -202,8 +202,8 @@ export default async function HomePage({
             />
             <FeatureCard
               icon={Sparkles}
-              title="2. AI matches against ~1,500 funds"
-              description="Claude reads through ACNC-visible PAFs and PuAFs and ranks them by overlap of cause, region, and giving history."
+              title={`2. AI matches against ${PRODUCT.fundCount} funds`}
+              description="The AI reads ACNC-registered, ABR-verified PAFs and PuAFs and ranks them by overlap of cause, registered state, and size band."
             />
             <FeatureCard
               icon={FileSearch}
@@ -270,10 +270,10 @@ export default async function HomePage({
             <p className="text-sm leading-relaxed">
               <ShieldCheck className="h-4 w-4 text-accent inline mr-1.5 -mt-0.5" />
               <strong className="text-foreground">Honesty note.</strong>{" "}
-              About a third of Australian PAFs choose not to publish on the ACNC
-              Charity Register. PatronAtlas does not currently include those. If
-              your charity needs the dark third too, hand-curated prospect-research
-              databases cover them at an order of magnitude more cost.
+              Some Australian PAFs choose not to publish on the ACNC Charity
+              Register. PatronAtlas only covers funds that are on it, so those
+              unlisted funds are not included. Hand-curated prospect-research
+              databases cover them, at an order of magnitude more cost.
             </p>
           </div>
         </div>
@@ -361,7 +361,8 @@ export default async function HomePage({
               What does it cost?
             </h2>
             <p className="mt-4 text-lg text-muted-foreground leading-relaxed">
-              PatronAtlas has one tier. ${PRODUCT.paidPriceAnnual} per year, launching {PRODUCT.launchTiming}.
+              The matching tool is free. A paid Pro tier is planned at an intended
+              ${PRODUCT.paidPriceAnnual} per year; price and timing are not yet fixed and may change.
             </p>
           </div>
 
@@ -376,8 +377,8 @@ export default async function HomePage({
                 <li>Email alerts for new funds in your cause area</li>
               </ul>
               <p className="mt-4 text-xs text-primary/80 font-medium">
-                Launches {PRODUCT.launchTiming}. First {PRODUCT.earlyBirdCap} buyers get
-                the first year for ${PRODUCT.earlyBirdPrice}.
+                Planned, not yet live. Price and timing are current intentions and may
+                change. The matching tool is free to use today.
               </p>
             </div>
           </div>
@@ -603,9 +604,9 @@ export default async function HomePage({
               Join the waitlist
             </h2>
             <p className="mt-4 text-lg text-muted-foreground leading-relaxed">
-              Pro launches {PRODUCT.launchTiming}. The first {PRODUCT.earlyBirdCap} buyers
-              get the first year for ${PRODUCT.earlyBirdPrice} instead of ${PRODUCT.paidPriceAnnual}.
-              After that, ${PRODUCT.paidPriceAnnual} across the board.
+              The matching tool is free to use now. Join the waitlist to hear when the
+              paid Pro tier (ongoing outreach workflow) is ready, and to help shape what
+              it does.
             </p>
           </div>
           <div className="rounded-2xl border border-border bg-card/80 backdrop-blur p-6 md:p-8">
@@ -622,7 +623,7 @@ export default async function HomePage({
           </h2>
           <p className="text-muted-foreground leading-relaxed mb-8">
             Describe what you do and get a ranked funder shortlist with reasoning and draft
-            emails in about a minute. Free live preview. Pro launches {PRODUCT.launchTiming} at ${PRODUCT.paidPriceAnnual} a year.
+            emails in about a minute. Free, no signup. A paid Pro tier is planned for later.
           </p>
           <div className="flex flex-col sm:flex-row gap-4 justify-center">
             <Link href="/tool/run">

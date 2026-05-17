@@ -168,16 +168,16 @@ export default function DemoPage() {
           </h1>
           <p className="text-lg text-muted-foreground leading-relaxed max-w-[60ch]">
             Three example matched funders for a small Queensland literacy
-            charity. Real matches at launch use Claude over the public ACNC
-            dataset and look like this.
+            charity. This is the shape of what the live tool returns.
           </p>
           <div className="mt-6 rounded-xl border border-accent/30 bg-accent/5 p-4 max-w-[60ch]">
             <p className="text-sm leading-relaxed">
               <AlertCircle className="h-4 w-4 text-accent inline mr-1.5 -mt-0.5" />
               <strong className="text-foreground">Demo only.</strong>{" "}
-              The fund names below are placeholders. Real output uses your
-              actual charity description against around 1,500 ACNC-visible
-              Australian PAFs and PuAFs. Pro launches {PRODUCT.launchTiming}.
+              The fund names below are illustrative placeholders. The real tool
+              runs your actual charity description against {PRODUCT.fundCount}{" "}
+              ACNC-registered, ABR-verified Australian PAFs and PuAFs, free, right
+              now. <Link href="/tool/run" className="text-primary underline underline-offset-4">Run it on your charity</Link>.
             </p>
           </div>
         </div>
@@ -309,22 +309,22 @@ export default function DemoPage() {
       <section className="border-t border-border bg-muted/30 py-16 md:py-24">
         <div className="mx-auto max-w-3xl px-4 md:px-8 text-center">
           <h2 className="text-2xl md:text-3xl font-bold tracking-tight mb-4">
-            Real matches launch {PRODUCT.launchTiming}.
+            Run this on your own charity.
           </h2>
           <p className="text-muted-foreground leading-relaxed mb-8">
-            Join the waitlist. The first {PRODUCT.earlyBirdCap} buyers get the first
-            year for ${PRODUCT.earlyBirdPrice} instead of ${PRODUCT.paidPriceAnnual}.
+            The tool is free and live now. Describe your charity and get a real
+            ranked shortlist in about a minute.
           </p>
           <div className="flex flex-col sm:flex-row gap-4 justify-center">
-            <Link href="/#waitlist">
+            <Link href="/tool/run">
               <Button size="lg" className="px-8 py-6 text-base">
-                Join the waitlist
+                Try it on your charity
                 <ArrowRight className="ml-2 h-4 w-4" />
               </Button>
             </Link>
-            <Link href="/tool">
+            <Link href="/#waitlist">
               <Button variant="outline" size="lg" className="px-8 py-6 text-base">
-                Submit your charity description
+                Join the Pro waitlist
               </Button>
             </Link>
           </div>

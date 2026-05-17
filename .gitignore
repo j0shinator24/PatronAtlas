@@ -55,3 +55,4 @@ next-env.d.ts
 
 # Model benchmark artifacts (regenerate via scripts/benchmark-models.mjs)
 /data/benchmark/
+/data/funds-enriched.pretty.json
