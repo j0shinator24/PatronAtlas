@@ -424,9 +424,9 @@ export default async function ToolRunPage({
                   <ShieldAlert className="h-5 w-5 text-accent shrink-0 mt-0.5" />
                   <span>
                     <strong className="text-foreground">Before you submit.</strong>{" "}
-                    What you enter is sent to overseas AI providers in the United States
-                    (OpenRouter with DeepSeek and similar free models, and Google Gemini
-                    as a fallback) to generate matches, and may be used to improve their
+                    What you enter is sent to an overseas AI provider in the United States
+                    (OpenRouter, processing via the DeepSeek model with a Qwen model as a
+                    fallback) to generate matches, and may be used to improve their
                     models. Enter only information your charity is
                     comfortable sharing publicly. Do not paste confidential, sensitive, or
                     unpublished details. See our{" "}

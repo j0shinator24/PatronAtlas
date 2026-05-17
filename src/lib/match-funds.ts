@@ -5,18 +5,17 @@
  * (region-prefiltered + compacted) as context and returns ranked top-10
  * matches for a given charity description.
  *
- * Backend: a fallback chain. Primary is the free OpenRouter chain
- * (MODEL_CHAIN: deepseek-v4-flash / glm-4.5-air / qwen3-next, all :free).
- * The OpenRouter :free pool is a shared, heavily rate-limited tier and
- * fails in sustained bursts, so the final fallback is Google Gemini
- * Flash on the AI Studio free tier (callGeminiOnce), a SEPARATE key with
- * a per-key quota that holds up when the shared pool is saturated. The
- * Gemini link is inert until GEMINI_API_KEY is set as a Worker secret.
+ * Backend: free first, one cheap paid fallback. Primary is OpenRouter's
+ * free `deepseek/deepseek-v4-flash:free` ($0 whenever it works). The
+ * :free pool is a shared, heavily rate-limited tier that fails in
+ * sustained bursts, so the single fallback is the cheap PAID
+ * `qwen/qwen3.5-flash-02-23` on OpenRouter (no rate-limit pool, ~USD
+ * 0.003 per match). The paid fallback fires only when the free model
+ * fails and needs OpenRouter account credit.
  *
- * Cost: USD 0 per call (all links are free tiers). No prompt caching
- * (free tiers don't support it); the whole fund context is sent each
- * call. Contact data is joined by ABN AFTER the model returns and is
- * never sent to any model.
+ * No prompt caching (free tier doesn't support it); the whole fund
+ * context is sent each call. Contact data is joined by ABN AFTER the
+ * model returns and is never sent to any model.
  *
  * v1 dataset scope (per scripts/fetch-acnc.mjs):
  * The ACNC bulk register has no explicit ancillary-fund flag. v1 uses a
@@ -139,15 +138,19 @@ const OPENROUTER_BASE_URL = "https://openrouter.ai/api/v1"
 // 429, return empty content, or have its slug churned at any time (observed
 // repeatedly: deepseek-v4-flash 502, gpt-oss empty, hermes provider-error,
 // qwen 429). A single hard-coded model means one provider blip = one burned
-// prospect from a cold DM. So we try a fallback chain in order until one
-// returns valid schema-conformant content. deepseek-v4-flash first
-// (benchmarked best: valid JSON, zero hallucinated ABNs, 1M context); the
-// rest are working fallbacks. Capped so worst-case latency stays bounded.
+// prospect from a cold DM. The :free pool is unreliable in bursts, so
+// the design is ONE strong free model (deepseek-v4-flash, benchmarked
+// best: valid JSON, zero hallucinated ABNs, 1M context) then a single
+// cheap PAID fallback. The dropped glm / qwen3-next :free links only
+// added latency, not reliability.
 const MODEL_CHAIN = [
   "deepseek/deepseek-v4-flash:free",
-  "z-ai/glm-4.5-air:free",
-  "qwen/qwen3-next-80b-a3b-instruct:free",
 ] as const
+
+// Cheap paid OpenRouter fallback. Fires only when the free model fails.
+// ~USD 0.003 per match, no shared rate-limit pool. Needs account credit
+// (without it OpenRouter returns a clear insufficient-credits error).
+const PAID_FALLBACK_MODEL = "qwen/qwen3.5-flash-02-23"
 
 const SYSTEM_BASE = `You are PatronAtlas, an AI prospect researcher for Australian Deductible Gift Recipient Item 1 (DGR1) charities.
 
@@ -372,172 +375,6 @@ async function callModelOnce(
   }
 }
 
-// Shared dedupe: free models occasionally repeat a fund; keep first,
-// preserve order, drop malformed rows. Empty result is a failure so the
-// caller falls through.
-function dedupeMatches(raw: unknown): FundMatch[] {
-  const arr = (raw as { matches?: FundMatch[] })?.matches ?? []
-  const seen = new Set<string>()
-  const out: FundMatch[] = []
-  for (const m of arr) {
-    if (!m || typeof m.abn !== "string") continue
-    if (seen.has(m.abn)) continue
-    seen.add(m.abn)
-    out.push(m)
-  }
-  return out
-}
-
-// Final fallback: Google Gemini Flash on the AI Studio free tier. This
-// is a SEPARATE provider/key with a per-key quota, so it stays reachable
-// when the shared OpenRouter free pool is saturated (which is the whole
-// reason it exists here). REST v1beta with structured JSON output.
-// gemini-2.5-flash first, 2.0-flash as a model-name-drift safety net.
-const GEMINI_MODELS = ["gemini-2.5-flash", "gemini-2.0-flash"] as const
-
-const geminiResponseSchema = {
-  type: "object",
-  properties: {
-    matches: {
-      type: "array",
-      items: {
-        type: "object",
-        properties: {
-          abn: { type: "string" },
-          fundName: { type: "string" },
-          fitScore: { type: "integer" },
-          fitReasoning: { type: "string" },
-          applicationStatus: {
-            type: "string",
-            enum: ["accepts", "unsolicited", "closed", "unknown"],
-          },
-          sourceUrl: { type: "string" },
-          draftEmailSubject: { type: "string" },
-          draftEmailBody: { type: "string" },
-        },
-        required: [
-          "abn",
-          "fundName",
-          "fitScore",
-          "fitReasoning",
-          "applicationStatus",
-          "sourceUrl",
-          "draftEmailSubject",
-          "draftEmailBody",
-        ],
-        propertyOrdering: [
-          "abn",
-          "fundName",
-          "fitScore",
-          "fitReasoning",
-          "applicationStatus",
-          "sourceUrl",
-          "draftEmailSubject",
-          "draftEmailBody",
-        ],
-      },
-    },
-  },
-  required: ["matches"],
-} as const
-
-async function callGeminiOnce(
-  apiKey: string,
-  system: string,
-  user: string,
-): Promise<{ matches: FundMatch[]; usage: MatchResult["usage"] }> {
-  const failures: string[] = []
-
-  for (const model of GEMINI_MODELS) {
-    try {
-      const response = await fetch(
-        `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent`,
-        {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-            "x-goog-api-key": apiKey,
-          },
-          body: JSON.stringify({
-            systemInstruction: { parts: [{ text: system }] },
-            contents: [{ role: "user", parts: [{ text: user }] }],
-            generationConfig: {
-              temperature: 0.2,
-              maxOutputTokens: 8192,
-              responseMimeType: "application/json",
-              responseSchema: geminiResponseSchema,
-            },
-          }),
-          signal: AbortSignal.timeout(75_000),
-        },
-      )
-
-      if (!response.ok) {
-        const text = await response.text().catch(() => "")
-        throw new Error(
-          `gemini ${model} HTTP ${response.status}: ${text.slice(0, 200)}`,
-        )
-      }
-
-      const result = (await response.json()) as {
-        candidates?: {
-          content?: { parts?: { text?: string }[] }
-          finishReason?: string
-        }[]
-        promptFeedback?: { blockReason?: string }
-        usageMetadata?: {
-          promptTokenCount?: number
-          candidatesTokenCount?: number
-          totalTokenCount?: number
-        }
-      }
-
-      if (result.promptFeedback?.blockReason) {
-        throw new Error(
-          `gemini ${model} blocked: ${result.promptFeedback.blockReason}`,
-        )
-      }
-
-      const cand = result.candidates?.[0]
-      const content =
-        cand?.content?.parts?.map((p) => p.text ?? "").join("") ?? ""
-      if (!content) {
-        throw new Error(
-          `gemini ${model} returned no content (finishReason=${cand?.finishReason ?? "none"})`,
-        )
-      }
-
-      let data: unknown
-      try {
-        data = JSON.parse(content)
-      } catch {
-        throw new Error(`gemini ${model} returned unparseable JSON`)
-      }
-
-      const deduped = dedupeMatches(data)
-      if (deduped.length === 0) {
-        throw new Error(`gemini ${model} returned zero usable matches`)
-      }
-
-      return {
-        matches: deduped,
-        usage: {
-          promptTokens: result.usageMetadata?.promptTokenCount ?? 0,
-          completionTokens: result.usageMetadata?.candidatesTokenCount ?? 0,
-          totalTokens: result.usageMetadata?.totalTokenCount ?? 0,
-          estimatedCostAUD: 0, // AI Studio free tier
-          model: `google/${model} (free tier)`,
-        },
-      }
-    } catch (err) {
-      failures.push(err instanceof Error ? err.message : String(err))
-      // try the next Gemini model name
-    }
-  }
-
-  throw new Error(`Gemini fallback failed. ${failures.join(" | ")}`)
-}
-
 // Join authoritative contact actions onto matches by ABN AFTER the
 // model returns. The model never sees contact data (keeps the prompt
 // lean and stops it inventing addresses); these values come straight
@@ -602,35 +439,31 @@ export async function matchFunds(input: MatchInput): Promise<MatchResult> {
   const user = buildUserPrompt(parsed, serialized)
   const failures: string[] = []
 
-  // Primary: free OpenRouter chain ($0 whenever it works).
   const orKey = process.env.OPENROUTER_API_KEY
-  if (orKey) {
-    for (const model of MODEL_CHAIN) {
-      try {
-        const ok = await callModelOnce(model, orKey, system, user)
-        return attachContacts(ok, funds)
-      } catch (err) {
-        failures.push(err instanceof Error ? err.message : String(err))
-        // try the next model in the chain
-      }
-    }
-  } else {
-    failures.push("OPENROUTER_API_KEY not configured (free chain skipped)")
+  if (!orKey) {
+    throw new Error("OPENROUTER_API_KEY is not configured. Set it as a Worker secret.")
   }
 
-  // Final fallback: Google Gemini Flash, AI Studio free tier. Separate
-  // key with a per-key quota, so it holds up when the shared OpenRouter
-  // free pool is saturated. INERT until GEMINI_API_KEY is set as a
-  // Worker secret, so shipping this before the key exists is safe and
-  // changes nothing for users.
-  const geminiKey = process.env.GEMINI_API_KEY
-  if (geminiKey) {
+  // Primary: free deepseek-v4-flash ($0 whenever the pool cooperates).
+  for (const model of MODEL_CHAIN) {
     try {
-      const ok = await callGeminiOnce(geminiKey, system, user)
+      const ok = await callModelOnce(model, orKey, system, user)
       return attachContacts(ok, funds)
     } catch (err) {
       failures.push(err instanceof Error ? err.message : String(err))
+      // free model failed, fall through to the paid fallback
     }
+  }
+
+  // Single fallback: cheap PAID qwen3.5-flash on the same OpenRouter
+  // key. Fires only when the free model failed. Needs account credit;
+  // without it OpenRouter returns a clear insufficient-credits error
+  // (surfaced in the technical detail) instead of a silent failure.
+  try {
+    const ok = await callModelOnce(PAID_FALLBACK_MODEL, orKey, system, user)
+    return attachContacts(ok, funds)
+  } catch (err) {
+    failures.push(err instanceof Error ? err.message : String(err))
   }
 
   throw new Error(`All models failed. ${failures.join(" | ")}`)
