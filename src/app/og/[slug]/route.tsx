@@ -5,11 +5,13 @@ import { ogContent } from "@/lib/og-content"
 // and the route re-deploys.
 export const revalidate = 86400
 
-const BG_FROM = "#0a1014"
-const BG_TO = "#14222b"
-const TEXT = "#f0f4f5"
-const PRIMARY = "#2eaecc"
-const MUTED = "#7ea5af"
+// Warm Waylight "atmos-deep" social card: deep teal gradient, cream text,
+// antique-gold accent. Matches waylight.com.au (sister brand).
+const BG_FROM = "#0E4242"
+const BG_TO = "#0A2F2F"
+const TEXT = "#F5EFE0"
+const PRIMARY = "#E8C879"
+const MUTED = "#9CC4C1"
 
 export async function GET(
   _req: Request,
