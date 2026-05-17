@@ -13,6 +13,10 @@ export const faqItems = [
     a: "Premium prospect-research databases in Australia have been running since the late 2000s. They employ researchers who individually profile every PAF, including those that don't publish on the ACNC register, and they cost in the order of $2,000+ per seat per year. PatronAtlas is cheaper, narrower, and faster. We use AI to read the public ACNC-visible data and write you a fund-fit shortlist in about 30 seconds for $290 a year. The premium tools are the reference work. PatronAtlas is the daily tool.",
   },
   {
+    q: "What's the difference between free and Pro?",
+    a: "Free finds you the funders. Pro works the list with you. The free tool is the complete research instrument: describe your charity and get matched DGR funders, the reasoning, ACNC source links, and draft outreach emails, with no expiry and no degradation. Pro is being built for the ongoing outreach loop: tracking who you have contacted, follow-up timing, and surfacing newly registered funds.",
+  },
+  {
     q: "Where does PatronAtlas get its data?",
     a: "Four public Australian registers. The ACNC Charity Register, the Australian Business Register (DGR endorsement type), ASIC Connect (corporate trustee), and the ATO's official DGR list. We cross-reference these on ABN, then enrich each fund with whatever the most recent annual report and recent news say. No scraping of subscription databases. No broker shortcuts.",
   },

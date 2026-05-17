@@ -279,6 +279,79 @@ export default async function HomePage({
         </div>
       </section>
 
+      {/* Free vs Pro. Direction-not-promise framing (MC brief), copy via
+          Ghostwriter pipeline. A/B/C block doubles as a Mom Test instrument.
+          Direction B is locked to "the public funds you already see" - do
+          not let any edit imply more/hidden funds. */}
+      <section id="free-vs-pro" className="border-t border-border py-20 md:py-28 scroll-mt-20">
+        <div className="mx-auto max-w-6xl px-4 md:px-8">
+          <div className="max-w-[60ch] mb-10">
+            <Badge variant="secondary" className="mb-4">Free vs Pro</Badge>
+            <h2 className="text-3xl md:text-4xl font-bold tracking-tight">
+              What&apos;s the difference between free and Pro?
+            </h2>
+            <p className="mt-4 text-lg text-muted-foreground leading-relaxed">
+              Free finds you the funders. Pro works the list with you. The free tool is the
+              whole research instrument: describe your charity, get your matched DGR funders,
+              the reasoning, the ACNC links, the draft emails. That does not expire and the
+              matching does not get worse over time. It stays free, and it stays good.
+            </p>
+            <p className="mt-3 text-base text-muted-foreground/85 leading-relaxed">
+              Here is the part the free tool does not touch. You found the funders. Now you
+              have to actually contact all of them, remember who you wrote to, work out when
+              to follow up, and notice when a new fund shows up that fits. That loop is what
+              eats the time you do not have, on top of the actual job of running the charity.
+            </p>
+            <p className="mt-3 text-base text-muted-foreground/85 leading-relaxed">
+              Pro is the direction we are building for that loop. It is not a finished feature
+              list and it is not a launch-day promise. It is three possible shapes, and which
+              one gets built first depends on which one would actually take work off your
+              plate. So the labels below are the real question, not decoration.
+            </p>
+          </div>
+
+          <div className="grid gap-6 md:grid-cols-3 max-w-5xl mb-10">
+            <div className="rounded-xl border border-border bg-card p-6">
+              <p className="text-sm font-semibold text-foreground mb-2">A. Runs the loop</p>
+              <p className="text-sm text-muted-foreground leading-relaxed">
+                Pro keeps the list for you: who you have contacted, who owes you a reply,
+                when to chase, and it re-runs the match on its own as new funds register.
+                You work the outreach, it holds the admin.
+              </p>
+            </div>
+            <div className="rounded-xl border border-border bg-card p-6">
+              <p className="text-sm font-semibold text-foreground mb-2">B. Goes deeper</p>
+              <p className="text-sm text-muted-foreground leading-relaxed">
+                More detail on the public funds you already see in your results. Their recent
+                grants, their giving statements, the trustees, the months they actually open
+                for applications. Same funds, read more closely, so a first approach is less
+                of a cold guess.
+              </p>
+            </div>
+            <div className="rounded-xl border border-border bg-card p-6">
+              <p className="text-sm font-semibold text-foreground mb-2">C. Tells you first</p>
+              <p className="text-sm text-muted-foreground leading-relaxed">
+                A weekly refresh, plus an alert the moment a fund that fits your cause
+                registers, so you are early instead of finding out a year late.
+              </p>
+            </div>
+          </div>
+
+          <div className="rounded-xl border border-accent/30 bg-accent/5 p-5 max-w-[65ch]">
+            <p className="text-sm leading-relaxed">
+              <strong className="text-foreground">One question, and it decides build order.</strong>{" "}
+              Which of these, A, B, or C, would actually save you time in a normal week?
+              Tell us. We are building the one that takes the most off real fundraisers
+              first, so the answer changes what gets built, not just what gets noted.{" "}
+              <Link href="/tool/run" className="text-primary underline underline-offset-4 hover:text-foreground">
+                Use the free tool first, then tell us
+              </Link>
+              .
+            </p>
+          </div>
+        </div>
+      </section>
+
       {/* Pricing */}
       <section id="pricing" className="py-20 md:py-28 scroll-mt-20">
         <div className="mx-auto max-w-6xl px-4 md:px-8">
