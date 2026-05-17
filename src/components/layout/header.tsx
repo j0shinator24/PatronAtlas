@@ -1,12 +1,17 @@
+"use client"
+
 import Image from "next/image"
 import Link from "next/link"
+import { usePathname } from "next/navigation"
+import { useState, useEffect } from "react"
 import { Menu, X } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { ThemeToggle } from "@/components/theme-toggle"
-import { cn } from "@/lib/utils"
 
-// Header is a server component. Mobile menu uses native <details>/<summary>
-// so it works without JS in LinkedIn / Telegram / Messenger in-app browsers.
+// Client component for the scroll/candlelight behaviour, but the mobile
+// menu stays a native <details>/<summary> disclosure so it still works
+// with zero JS in LinkedIn / Telegram / Messenger in-app browsers.
+// Scroll + active-link are progressive enhancement only.
 // WCAG 2.1.1 (Keyboard), 2.4.3 (Focus Order), 4.1.2 (Name, Role, Value).
 
 const navItems = [
@@ -17,49 +22,71 @@ const navItems = [
 ]
 
 export function Header() {
+  const pathname = usePathname()
+  const [scrolled, setScrolled] = useState(false)
+
+  useEffect(() => {
+    const onScroll = () => setScrolled(window.scrollY > 12)
+    onScroll()
+    window.addEventListener("scroll", onScroll, { passive: true })
+    return () => window.removeEventListener("scroll", onScroll)
+  }, [])
+
+  const isActive = (href: string) =>
+    href.startsWith("/#")
+      ? false
+      : pathname === href || pathname.startsWith(href + "/")
+
   return (
-    <header className="sticky top-0 z-50 w-full border-b border-border/50 bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/80">
+    <header
+      className={[
+        "sticky top-0 z-50 w-full transition-colors duration-300",
+        scrolled
+          ? "bg-[#FBF7EE]/95 backdrop-blur dark:bg-transparent dark:backdrop-blur-md border-b border-border/40 dark:border-transparent"
+          : "bg-transparent",
+      ].join(" ")}
+    >
       <div className="mx-auto flex h-16 max-w-6xl items-center justify-between px-4 md:px-8">
-        <Link href="/" className="flex items-center gap-2 group">
+        <Link href="/" className="flex items-center gap-2 group" aria-label="PatronAtlas home">
           <Image
             src="/logo.png"
             alt=""
             width={30}
             height={31}
-            className="shrink-0 transition-transform group-hover:scale-105 logo-candle"
+            className="shrink-0 transition-transform duration-500 group-hover:rotate-[-3deg] logo-candle"
+            priority
           />
           <div>
-            <span className="text-xl font-semibold tracking-tight text-foreground block">
+            <span className="font-display text-2xl tracking-tight text-foreground block leading-none">
               PatronAtlas
             </span>
-            <span className="block text-xs font-medium text-muted-foreground/80 -mt-0.5 leading-none">
+            <span className="block text-xs font-medium text-muted-foreground/80 mt-1 leading-none">
               by Waylight
             </span>
           </div>
         </Link>
 
         {/* Desktop nav */}
-        <nav className="hidden md:flex items-center gap-1" aria-label="Main navigation">
+        <nav className="hidden md:flex items-center gap-9" aria-label="Main navigation">
           {navItems.map((item) => (
             <Link
               key={item.href}
               href={item.href}
-              className={cn(
-                "relative px-4 py-2 text-sm font-medium rounded-md transition-colors",
-                "text-muted-foreground hover:text-foreground hover:bg-muted",
-              )}
+              className="nav-link"
+              data-active={isActive(item.href) ? "true" : "false"}
+              aria-current={isActive(item.href) ? "page" : undefined}
             >
               {item.label}
             </Link>
           ))}
-          <div className="relative">
+          <div className="relative ml-2">
             <ThemeToggle />
             <span className="light-hint absolute -bottom-7 left-1/2 -translate-x-1/2 font-handwritten text-2xl text-muted-foreground/60 -rotate-3 whitespace-nowrap pointer-events-none select-none">
               try dark mode
             </span>
           </div>
           <Link href="/tool/run">
-            <Button variant="default" size="default" className="ml-2">
+            <Button variant="default" size="default">
               Try the tool
             </Button>
           </Link>
@@ -87,6 +114,7 @@ export function Header() {
                     <Link
                       href={item.href}
                       className="block px-4 py-3 text-base font-medium rounded-md transition-colors text-muted-foreground hover:text-foreground hover:bg-muted"
+                      aria-current={isActive(item.href) ? "page" : undefined}
                     >
                       {item.label}
                     </Link>

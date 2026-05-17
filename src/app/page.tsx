@@ -14,7 +14,6 @@ import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
 import { CompareCellView } from "@/components/compare-cell"
 import { FeatureCard } from "@/components/feature-card"
-import { HeroBackground } from "@/components/hero-background"
 import { SampleForm } from "@/components/sample-form"
 import {
   BUSINESS,
@@ -111,18 +110,17 @@ export default async function HomePage({
       />
 
       {/* Hero */}
-      <section className="relative overflow-hidden bg-gradient-to-br from-primary/8 via-background to-accent/5 py-24 md:py-32">
-        <HeroBackground />
+      <section className="atmos relative overflow-hidden py-24 md:py-32">
         <div className="relative mx-auto max-w-6xl px-4 md:px-8">
           <div className="max-w-[68ch]">
-            <p className="text-sm font-medium tracking-widest uppercase text-primary mb-4">
+            <p className="eyebrow mb-6">
               AI prospect research for Australian charities
             </p>
-            <h1 className="text-5xl font-bold tracking-tight text-foreground md:text-6xl lg:text-7xl leading-[1.05]">
+            <h1 className="font-display text-5xl text-foreground md:text-6xl lg:text-7xl leading-[1.05]">
               An atlas of Australia&apos;s{" "}
-              <span className="text-primary">philanthropic funders.</span>
+              <span className="text-primary font-display-italic">philanthropic funders.</span>
             </h1>
-            <p className="mt-8 text-xl text-muted-foreground leading-relaxed max-w-[60ch]">
+            <p className="mt-8 text-xl text-foreground/75 leading-relaxed max-w-[60ch]">
               The complete guide to Australian Private Ancillary Funds costs $2,699 a year.
               The data underneath comes from the public ACNC, ABR and ASIC registers, where
               it costs nothing. PatronAtlas reads that data with AI and writes you a shortlist

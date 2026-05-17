@@ -1,24 +1,34 @@
 import type { Metadata } from "next"
-import { Geist, Geist_Mono, Caveat } from "next/font/google"
+import { Fraunces, DM_Sans, Geist_Mono, Caveat } from "next/font/google"
 import { Header } from "@/components/layout/header"
 import { Footer } from "@/components/layout/footer"
 import { ThemeProvider } from "@/components/theme-provider"
 import { BASE_URL, BUSINESS } from "@/lib/constants"
 import "./globals.css"
 
-const geistSans = Geist({
-  variable: "--font-sans",
+const fraunces = Fraunces({
+  variable: "--font-fraunces",
   subsets: ["latin"],
+  display: "swap",
+  axes: ["opsz", "SOFT"],
+})
+
+const dmSans = DM_Sans({
+  variable: "--font-dm-sans",
+  subsets: ["latin"],
+  display: "swap",
 })
 
 const geistMono = Geist_Mono({
   variable: "--font-geist-mono",
   subsets: ["latin"],
+  display: "swap",
 })
 
 const caveat = Caveat({
   variable: "--font-handwritten",
   subsets: ["latin"],
+  display: "swap",
 })
 
 export const metadata: Metadata = {
@@ -102,7 +112,7 @@ export default function RootLayout({
   children: React.ReactNode
 }>) {
   return (
-    <html lang="en" className={`${geistSans.variable} ${geistMono.variable} ${caveat.variable} h-full antialiased`} suppressHydrationWarning>
+    <html lang="en" className={`${fraunces.variable} ${dmSans.variable} ${geistMono.variable} ${caveat.variable} h-full antialiased`} suppressHydrationWarning>
       <body className="min-h-full flex flex-col font-sans">
         <div className="candlelight-ambient" aria-hidden="true" />
         <script
