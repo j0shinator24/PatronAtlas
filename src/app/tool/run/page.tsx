@@ -19,7 +19,7 @@ export const dynamic = "force-dynamic"
 export const metadata: Metadata = {
   title: "Match your charity to Australian funders",
   description:
-    "Free tool. Describe your DGR1 charity and get a ranked shortlist of Australian Private and Public Ancillary Funds, with reasoning and a draft outreach email, in about a minute.",
+    "Free tool. Describe your DGR1 charity and get a ranked shortlist of Australian Private and Public Ancillary Funds, with reasoning and a draft outreach email, in a minute or two.",
   alternates: { canonical: `${BASE_URL}/tool/run` },
   openGraph: {
     type: "website",
@@ -219,14 +219,23 @@ function ResultsSkeleton() {
   return (
     <section className="py-12 md:py-16">
       <div className="mx-auto max-w-4xl px-4 md:px-8">
-        <div className="rounded-2xl border border-border bg-card/60 p-6 mb-6">
-          <p className="text-sm font-medium mb-2 flex items-center gap-2">
-            <Sparkles className="h-4 w-4 text-primary animate-pulse" />
-            Reading the fund register and ranking matches.
+        <div className="rounded-2xl border-2 border-primary bg-primary/10 p-6 mb-8 shadow-sm">
+          <p className="text-lg md:text-xl font-bold mb-2 flex items-center gap-2 text-foreground">
+            <Sparkles className="h-6 w-6 text-primary animate-pulse shrink-0" />
+            Working on it. This takes up to about two minutes.
           </p>
-          <p className="text-sm text-muted-foreground leading-relaxed">
-            This takes about a minute. Keep this tab open. Results appear here
-            automatically the moment they are ready, you do not need to refresh.
+          {/* CSS-only indeterminate progress bar (no JS; works in JS-restricted webviews) */}
+          <div className="h-2 w-full rounded-full bg-primary/20 overflow-hidden my-4" aria-hidden="true">
+            <div className="h-full w-1/3 rounded-full bg-primary animate-pulse" />
+          </div>
+          <p className="text-base font-bold text-primary leading-relaxed">
+            Do not refresh, do not press back, do not close this tab.
+          </p>
+          <p className="text-sm text-muted-foreground leading-relaxed mt-1">
+            The AI is reading the full fund register and ranking matches for you.
+            Refreshing or leaving starts it over from zero. Your results appear on
+            this screen automatically the moment they are ready. Nothing is broken,
+            it is just thinking.
           </p>
         </div>
         <div className="space-y-4" aria-hidden="true">
@@ -274,7 +283,7 @@ export default async function ToolRunPage({
           <p className="text-base text-muted-foreground leading-relaxed max-w-[65ch]">
             {submitted
               ? `Ranked against ${PRODUCT.fundCount} Australian Private and Public Ancillary Funds, every one ACNC-registered and verified DGR Item 2 on the public ABR.`
-              : `Describe your DGR1 charity and get a ranked shortlist of Australian Private and Public Ancillary Funds, each with reasoning, an ACNC source link, and a draft outreach email. Free. Ranked against ${PRODUCT.fundCount} verified funds. Takes about a minute.`}
+              : `Describe your DGR1 charity and get a ranked shortlist of Australian Private and Public Ancillary Funds, each with reasoning, an ACNC source link, and a draft outreach email. Free. Ranked against ${PRODUCT.fundCount} verified funds. Takes a minute or two.`}
           </p>
         </div>
       </section>
@@ -330,7 +339,7 @@ export default async function ToolRunPage({
                   <ArrowRight className="ml-2 h-4 w-4" />
                 </Button>
                 <p className="text-xs text-muted-foreground leading-relaxed">
-                  Free. Takes about a minute while the AI reads the fund register. We log
+                  Free. Takes a minute or two while the AI reads the fund register. We log
                   your description to improve matching. A paid Pro tier is planned for
                   later; the matching tool here stays free.
                 </p>
