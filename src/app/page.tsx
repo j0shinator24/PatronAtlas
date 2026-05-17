@@ -129,18 +129,25 @@ export default async function HomePage({
               of funders that fit your cause, in about 30 seconds, for ${PRODUCT.paidPriceAnnual} a year.
             </p>
             <div className="mt-10 flex flex-col sm:flex-row gap-4">
-              <Link href="#waitlist">
+              <Link href="/tool/run">
                 <Button size="lg" className="w-full sm:w-auto text-base px-8 py-6">
-                  Join the waitlist for Pro
+                  Try it free now
                   <ArrowRight className="ml-2 h-4 w-4" />
                 </Button>
               </Link>
-              <Link href="/demo">
+              <Link href="#waitlist">
                 <Button variant="outline" size="lg" className="w-full sm:w-auto text-base px-8 py-6">
-                  See example output
+                  Join the Pro waitlist
                 </Button>
               </Link>
             </div>
+            <p className="mt-4 text-sm text-muted-foreground">
+              Live preview, no signup. Describe your charity, get a ranked funder shortlist in about a minute.{" "}
+              <Link href="/demo" className="underline underline-offset-4 hover:text-foreground">
+                Or see a worked example
+              </Link>
+              .
+            </p>
           </div>
         </div>
       </section>
@@ -538,18 +545,25 @@ export default async function HomePage({
       <section className="py-16 md:py-24">
         <div className="mx-auto max-w-3xl px-4 md:px-8 text-center">
           <h2 className="text-2xl md:text-3xl font-bold tracking-tight mb-4">
-            See what Pro will produce.
+            Try it on your own charity.
           </h2>
           <p className="text-muted-foreground leading-relaxed mb-8">
-            Three example matches show what charity descriptions get back. The full tool
-            launches {PRODUCT.launchTiming} at ${PRODUCT.paidPriceAnnual} a year.
+            Describe what you do and get a ranked funder shortlist with reasoning and draft
+            emails in about a minute. Free live preview. Pro launches {PRODUCT.launchTiming} at ${PRODUCT.paidPriceAnnual} a year.
           </p>
-          <Link href="/demo">
-            <Button size="lg" className="px-8 py-6 text-base">
-              View example output
-              <ArrowRight className="ml-2 h-4 w-4" />
-            </Button>
-          </Link>
+          <div className="flex flex-col sm:flex-row gap-4 justify-center">
+            <Link href="/tool/run">
+              <Button size="lg" className="px-8 py-6 text-base">
+                Try it free now
+                <ArrowRight className="ml-2 h-4 w-4" />
+              </Button>
+            </Link>
+            <Link href="/demo">
+              <Button variant="outline" size="lg" className="px-8 py-6 text-base">
+                See a worked example
+              </Button>
+            </Link>
+          </div>
         </div>
       </section>
     </>

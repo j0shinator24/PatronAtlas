@@ -10,10 +10,10 @@ import { cn } from "@/lib/utils"
 // WCAG 2.1.1 (Keyboard), 2.4.3 (Focus Order), 4.1.2 (Name, Role, Value).
 
 const navItems = [
+  { href: "/tool/run", label: "Try the tool" },
   { href: "/#product", label: "Product" },
   { href: "/#pricing", label: "Pricing" },
   { href: "/#sources", label: "Data sources" },
-  { href: "/#waitlist", label: "Waitlist" },
 ]
 
 export function Header() {
@@ -58,9 +58,9 @@ export function Header() {
               try dark mode
             </span>
           </div>
-          <Link href="/#waitlist">
+          <Link href="/tool/run">
             <Button variant="default" size="default" className="ml-2">
-              Join waitlist
+              Try the tool
             </Button>
           </Link>
         </nav>
@@ -93,9 +93,9 @@ export function Header() {
                   </li>
                 ))}
                 <li className="pt-2">
-                  <Link href="/#waitlist">
+                  <Link href="/tool/run">
                     <Button variant="default" className="w-full">
-                      Join waitlist
+                      Try the tool
                     </Button>
                   </Link>
                 </li>
