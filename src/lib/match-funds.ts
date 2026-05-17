@@ -8,10 +8,14 @@
  * Backend: free first, one cheap paid fallback. Primary is OpenRouter's
  * free `deepseek/deepseek-v4-flash:free` ($0 whenever it works). The
  * :free pool is a shared, heavily rate-limited tier that fails in
- * sustained bursts, so the single fallback is the cheap PAID
- * `qwen/qwen3.5-flash-02-23` on OpenRouter (no rate-limit pool, ~USD
- * 0.003 per match). The paid fallback fires only when the free model
- * fails and needs OpenRouter account credit.
+ * sustained bursts, so the single fallback is PAID
+ * `deepseek/deepseek-v4-flash` on OpenRouter (the SAME model as the
+ * free one, benchmarked zero hallucinated ABNs; ~USD 0.0043 per
+ * match, no shared rate-limit pool). The paid fallback fires only
+ * when the free model fails and needs OpenRouter account credit. A
+ * hard ABN-existence guard in attachContacts drops any match whose
+ * ABN is not in the dataset, so a hallucinated fund can never reach
+ * a user regardless of which model produced it.
  *
  * No prompt caching (free tier doesn't support it); the whole fund
  * context is sent each call. Contact data is joined by ABN AFTER the
@@ -147,10 +151,13 @@ const MODEL_CHAIN = [
   "deepseek/deepseek-v4-flash:free",
 ] as const
 
-// Cheap paid OpenRouter fallback. Fires only when the free model fails.
-// ~USD 0.003 per match, no shared rate-limit pool. Needs account credit
-// (without it OpenRouter returns a clear insufficient-credits error).
-const PAID_FALLBACK_MODEL = "qwen/qwen3.5-flash-02-23"
+// Paid OpenRouter fallback. Fires only when the free model fails. Same
+// model as the free deepseek-v4-flash (the :free suffix is only
+// rate-limited routing) so it inherits the benchmarked zero-
+// hallucinated-ABN behaviour, just with no shared pool. ~USD 0.0043
+// per match. Needs account credit (without it OpenRouter returns a
+// clear insufficient-credits error in the technical detail).
+const PAID_FALLBACK_MODEL = "deepseek/deepseek-v4-flash"
 
 const SYSTEM_BASE = `You are PatronAtlas, an AI prospect researcher for Australian Deductible Gift Recipient Item 1 (DGR1) charities.
 
@@ -390,22 +397,36 @@ function attachContacts(
   const byAbn = new Map<string, FundProfile>()
   for (const f of funds) byAbn.set(digitsOnly(f.abn), f)
 
-  const matches = result.matches.map((m) => {
-    const f = byAbn.get(digitsOnly(m.abn))
-    const isPuAF = f?.abr?.dgrCategory === "Public Ancillary Fund"
-    const d = digitsOnly(m.abn)
-    const contact: FundContact = {
-      isPuAF,
-      acncUrl: f?.url || m.sourceUrl,
-      abrUrl: d
-        ? `https://abr.business.gov.au/ABN/View?abn=${d}`
-        : "https://abr.business.gov.au",
-      website: f?.website ?? null,
-      email: isPuAF && f?.contactEmail ? f.contactEmail : null,
-      phone: isPuAF && f?.contactPhone ? f.contactPhone : null,
-    }
-    return { ...m, contact }
-  })
+  // Integrity guard: a match is only real if its ABN exists in the
+  // dataset. Models occasionally fabricate a fund/ABN despite the
+  // system prompt (observed live with a fallback model). Drop any such
+  // row so a hallucinated fund, and its possibly fabricated ACNC link,
+  // can never reach a user. Enforced here so it covers EVERY model in
+  // the chain, not just one.
+  const matches = result.matches
+    .map((m) => ({ m, f: byAbn.get(digitsOnly(m.abn)) }))
+    .filter((x): x is { m: FundMatch; f: FundProfile } => Boolean(x.f))
+    .map(({ m, f }) => {
+      const isPuAF = f.abr?.dgrCategory === "Public Ancillary Fund"
+      const d = digitsOnly(m.abn)
+      const contact: FundContact = {
+        isPuAF,
+        acncUrl: f.url || m.sourceUrl,
+        abrUrl: d
+          ? `https://abr.business.gov.au/ABN/View?abn=${d}`
+          : "https://abr.business.gov.au",
+        website: f.website ?? null,
+        email: isPuAF && f.contactEmail ? f.contactEmail : null,
+        phone: isPuAF && f.contactPhone ? f.contactPhone : null,
+      }
+      return { ...m, contact }
+    })
+
+  // Every row was a fabrication -> treat as a model failure so the
+  // chain falls through to the next model instead of showing nothing.
+  if (matches.length === 0) {
+    throw new Error("all matches failed the dataset ABN integrity check")
+  }
 
   return { matches, usage: result.usage }
 }
