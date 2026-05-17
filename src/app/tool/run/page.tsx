@@ -44,6 +44,18 @@ function toToolHref(input: MatchInput, opts?: { edit?: boolean }): string {
 const ACTION_CHIP =
   "inline-flex items-center gap-1.5 rounded-full border border-border bg-muted/40 px-3 py-1 text-xs font-medium hover:border-primary/50 hover:text-primary transition-colors"
 
+// Retry / edit actions are plain <a> (full-document navigation), NOT
+// next/link. A soft client navigation to this force-dynamic route shows
+// no loading state (there is no loading.tsx) so the page sits frozen on
+// the error card for the whole 60-120s model call and looks dead. A
+// full <a> navigation streams the Suspense shell + skeleton in ~0.2s,
+// exactly like the GET form does, so the user gets instant feedback.
+// h-11 = 44px, a proper mobile tap target.
+const BTN_BASE =
+  "inline-flex items-center justify-center rounded-lg h-11 px-5 text-sm font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+const BTN_PRIMARY = `${BTN_BASE} bg-primary text-primary-foreground hover:bg-primary/90`
+const BTN_OUTLINE = `${BTN_BASE} border border-border bg-background hover:bg-muted hover:text-foreground`
+
 export const metadata: Metadata = {
   title: "Match your charity to Australian funders",
   description:
@@ -131,12 +143,8 @@ async function MatchResults({ input }: { input: MatchInput }) {
               with your charity or your input.
             </p>
             <div className="flex flex-wrap gap-3">
-              <Link href={toToolHref(input)} prefetch={false}>
-                <Button variant="outline">Try again</Button>
-              </Link>
-              <Link href={toToolHref(input, { edit: true })} prefetch={false}>
-                <Button variant="ghost">Edit details</Button>
-              </Link>
+              <a href={toToolHref(input)} className={BTN_OUTLINE}>Try again</a>
+              <a href={toToolHref(input, { edit: true })} className={`${BTN_BASE} hover:bg-muted hover:text-foreground`}>Edit details</a>
             </div>
             <p className="mt-3 text-xs text-muted-foreground">
               Both keep everything you entered, nothing to retype.
@@ -169,16 +177,13 @@ async function MatchResults({ input }: { input: MatchInput }) {
               description. Please try again in a moment.
             </p>
             <div className="flex flex-wrap gap-3">
-              <Link href={toToolHref(input)} prefetch={false}>
-                <Button variant="default">Try again</Button>
-              </Link>
-              <Link href={toToolHref(input, { edit: true })} prefetch={false}>
-                <Button variant="outline">Edit details</Button>
-              </Link>
+              <a href={toToolHref(input)} className={BTN_PRIMARY}>Try again</a>
+              <a href={toToolHref(input, { edit: true })} className={BTN_OUTLINE}>Edit details</a>
             </div>
             <p className="mt-3 text-xs text-muted-foreground leading-relaxed">
               Try again re-runs with everything you already entered, nothing to
-              retype. The free models rate-limit in bursts, so a second attempt
+              retype. It reloads the page so you immediately see it working
+              again. Free models rate-limit in bursts; a second attempt
               usually goes straight through.
             </p>
             <details className="mt-4">
