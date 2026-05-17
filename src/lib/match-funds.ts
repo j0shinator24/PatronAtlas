@@ -53,6 +53,10 @@ export type FundProfile = {
   website: string | null
   url: string
   abr: AbrEnrichment
+  // Public org contacts, PuAFs only, populated by
+  // scripts/merge-puaf-contacts.mjs from the capped public-site scrape.
+  contactEmail?: string | null
+  contactPhone?: string | null
 }
 
 // v3 dataset: full ACNC vs ABR scan. Every ACNC-visible Australian
@@ -220,6 +224,20 @@ export const MatchInputSchema = z.object({
 
 export type MatchInput = z.infer<typeof MatchInputSchema>
 
+// Per-fund contact actions surfaced next to the draft email. PuAFs
+// (public funds that invite contact) can carry website/email/phone.
+// PAFs are private giving vehicles: no cold inbox, so isPuAF=false
+// drives a "find the trustees via the ACNC record" path instead.
+// acncUrl + abrUrl are always present so no result is a dead end.
+export type FundContact = {
+  isPuAF: boolean
+  acncUrl: string
+  abrUrl: string
+  website: string | null
+  email: string | null
+  phone: string | null
+}
+
 export type FundMatch = {
   abn: string
   fundName: string
@@ -229,6 +247,7 @@ export type FundMatch = {
   sourceUrl: string
   draftEmailSubject: string
   draftEmailBody: string
+  contact: FundContact
 }
 
 export type MatchResult = {
@@ -348,6 +367,41 @@ async function callModelOnce(
   }
 }
 
+// Join authoritative contact actions onto matches by ABN AFTER the
+// model returns. The model never sees contact data (keeps the prompt
+// lean and stops it inventing addresses); these values come straight
+// from the dataset, not the LLM.
+function digitsOnly(s: string): string {
+  return String(s).replace(/\D/g, "")
+}
+
+function attachContacts(
+  result: { matches: FundMatch[]; usage: MatchResult["usage"] },
+  funds: FundProfile[],
+): MatchResult {
+  const byAbn = new Map<string, FundProfile>()
+  for (const f of funds) byAbn.set(digitsOnly(f.abn), f)
+
+  const matches = result.matches.map((m) => {
+    const f = byAbn.get(digitsOnly(m.abn))
+    const isPuAF = f?.abr?.dgrCategory === "Public Ancillary Fund"
+    const d = digitsOnly(m.abn)
+    const contact: FundContact = {
+      isPuAF,
+      acncUrl: f?.url || m.sourceUrl,
+      abrUrl: d
+        ? `https://abr.business.gov.au/ABN/View?abn=${d}`
+        : "https://abr.business.gov.au",
+      website: f?.website ?? null,
+      email: isPuAF && f?.contactEmail ? f.contactEmail : null,
+      phone: isPuAF && f?.contactPhone ? f.contactPhone : null,
+    }
+    return { ...m, contact }
+  })
+
+  return { matches, usage: result.usage }
+}
+
 /**
  * Match an Australian DGR1 charity description against the cached ACNC
  * dataset. Returns up to 10 ranked matches with reasoning, source URLs,
@@ -385,7 +439,7 @@ export async function matchFunds(input: MatchInput): Promise<MatchResult> {
   for (const model of MODEL_CHAIN) {
     try {
       const ok = await callModelOnce(model, apiKey, system, user)
-      return ok
+      return attachContacts(ok, funds)
     } catch (err) {
       failures.push(err instanceof Error ? err.message : String(err))
       // try the next model in the chain

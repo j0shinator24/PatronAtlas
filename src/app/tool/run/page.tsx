@@ -2,7 +2,7 @@ import type { Metadata } from "next"
 import { Suspense } from "react"
 import Link from "next/link"
 import { headers } from "next/headers"
-import { ArrowLeft, Sparkles, Star, ExternalLink, AlertCircle, Mail, ArrowRight, ShieldAlert } from "lucide-react"
+import { ArrowLeft, Sparkles, Star, AlertCircle, Mail, ArrowRight, ShieldAlert, Globe, Phone, FileText, Landmark, Building2 } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
 import { Input } from "@/components/ui/input"
@@ -15,6 +15,34 @@ import { checkRateLimit } from "@/lib/rate-limit"
 // Per-request rendering: every charity description is unique and results
 // must never be cached or leaked between viewers.
 export const dynamic = "force-dynamic"
+
+// Website values in the dataset are stored bare ("acme.org.au") or with
+// a scheme. Normalise to an absolute https URL for the link.
+function webHref(w: string): string {
+  return /^https?:\/\//i.test(w) ? w : `https://${w.replace(/^\/+/, "")}`
+}
+
+// The form is GET, so the whole input round-trips through the query
+// string. Rebuild that URL so "Try again" re-runs the exact same match
+// instead of dumping the user back to an empty form to retype everything.
+// _r is a cache-busting nonce so a click from the identical failing URL
+// still forces a fresh server render (Next would otherwise no-op a
+// same-href navigation). edit=1 returns the prefilled form for tweaking.
+function toToolHref(input: MatchInput, opts?: { edit?: boolean }): string {
+  const q = new URLSearchParams()
+  q.set("charity", input.charity)
+  q.set("description", input.description)
+  q.set("region", input.region)
+  q.set("ask", input.ask)
+  if (input.context) q.set("context", input.context)
+  if (opts?.edit) q.set("edit", "1")
+  else q.set("_r", String(Date.now()))
+  return `/tool/run?${q.toString()}`
+}
+
+// Shared chip styling for the per-fund action row.
+const ACTION_CHIP =
+  "inline-flex items-center gap-1.5 rounded-full border border-border bg-muted/40 px-3 py-1 text-xs font-medium hover:border-primary/50 hover:text-primary transition-colors"
 
 export const metadata: Metadata = {
   title: "Match your charity to Australian funders",
@@ -102,9 +130,17 @@ async function MatchResults({ input }: { input: MatchInput }) {
               {rl.retryAfterMin} minute{rl.retryAfterMin === 1 ? "" : "s"}. Nothing is wrong
               with your charity or your input.
             </p>
-            <Link href="/tool/run">
-              <Button variant="outline">Back to the form</Button>
-            </Link>
+            <div className="flex flex-wrap gap-3">
+              <Link href={toToolHref(input)} prefetch={false}>
+                <Button variant="outline">Try again</Button>
+              </Link>
+              <Link href={toToolHref(input, { edit: true })} prefetch={false}>
+                <Button variant="ghost">Edit details</Button>
+              </Link>
+            </div>
+            <p className="mt-3 text-xs text-muted-foreground">
+              Both keep everything you entered, nothing to retype.
+            </p>
           </div>
         </div>
       </section>
@@ -132,12 +168,25 @@ async function MatchResults({ input }: { input: MatchInput }) {
               The AI provider returned an error or timed out. This is on us, not your
               description. Please try again in a moment.
             </p>
-            <pre className="text-xs bg-muted/50 rounded p-3 overflow-x-auto whitespace-pre-wrap">{runError.slice(0, 400)}</pre>
-            <div className="mt-4">
-              <Link href="/tool/run">
-                <Button variant="outline">Try again</Button>
+            <div className="flex flex-wrap gap-3">
+              <Link href={toToolHref(input)} prefetch={false}>
+                <Button variant="default">Try again</Button>
+              </Link>
+              <Link href={toToolHref(input, { edit: true })} prefetch={false}>
+                <Button variant="outline">Edit details</Button>
               </Link>
             </div>
+            <p className="mt-3 text-xs text-muted-foreground leading-relaxed">
+              Try again re-runs with everything you already entered, nothing to
+              retype. The free models rate-limit in bursts, so a second attempt
+              usually goes straight through.
+            </p>
+            <details className="mt-4">
+              <summary className="cursor-pointer text-xs text-muted-foreground/70 hover:text-muted-foreground">
+                Technical detail
+              </summary>
+              <pre className="mt-2 text-xs bg-muted/50 rounded p-3 overflow-x-auto whitespace-pre-wrap">{runError.slice(0, 400)}</pre>
+            </details>
           </div>
         </div>
       </section>
@@ -177,10 +226,51 @@ async function MatchResults({ input }: { input: MatchInput }) {
               <div className="flex flex-wrap gap-2 text-xs mb-4">
                 <span className="rounded-full bg-muted px-2.5 py-0.5">Application: {m.applicationStatus}</span>
               </div>
-              <a href={m.sourceUrl} target="_blank" rel="noopener noreferrer" className="inline-flex items-center gap-1 text-xs text-primary hover:underline mb-4">
-                <ExternalLink className="h-3 w-3" />
-                ACNC source
-              </a>
+              <div className="flex flex-wrap items-center gap-2 mb-3">
+                <a href={m.contact.acncUrl} target="_blank" rel="noopener noreferrer" className={ACTION_CHIP}>
+                  <FileText className="h-3.5 w-3.5" />
+                  ACNC record
+                </a>
+                <a href={m.contact.abrUrl} target="_blank" rel="noopener noreferrer" className={ACTION_CHIP}>
+                  <Landmark className="h-3.5 w-3.5" />
+                  ABR lookup
+                </a>
+                {m.contact.website && (
+                  <a href={webHref(m.contact.website)} target="_blank" rel="noopener noreferrer" className={ACTION_CHIP}>
+                    <Globe className="h-3.5 w-3.5" />
+                    Website
+                  </a>
+                )}
+                {m.contact.isPuAF && m.contact.email && (
+                  <a href={`mailto:${m.contact.email}`} className={ACTION_CHIP}>
+                    <Mail className="h-3.5 w-3.5" />
+                    {m.contact.email}
+                  </a>
+                )}
+                {m.contact.isPuAF && m.contact.phone && (
+                  <a href={`tel:${m.contact.phone}`} className={ACTION_CHIP}>
+                    <Phone className="h-3.5 w-3.5" />
+                    {m.contact.phone}
+                  </a>
+                )}
+              </div>
+              {!m.contact.isPuAF && (
+                <p className="flex items-start gap-1.5 text-xs text-muted-foreground mb-4 max-w-[62ch]">
+                  <Building2 className="h-3.5 w-3.5 mt-0.5 shrink-0" />
+                  <span>
+                    Private Ancillary Fund. PAFs do not run open application rounds or take cold
+                    approaches. The way in is the people who control it: the ACNC record lists this
+                    fund&apos;s responsible persons. Approach via a trustee or its philanthropic
+                    adviser through a warm introduction.
+                  </span>
+                </p>
+              )}
+              {m.contact.isPuAF && (
+                <p className="text-xs text-muted-foreground mb-4 max-w-[62ch]">
+                  Public Ancillary Fund. Verify the current contact and any open round on the
+                  fund&apos;s own ACNC record or website before reaching out.
+                </p>
+              )}
               <details className="mt-4 rounded-xl border border-border bg-muted/30 p-4">
                 <summary className="cursor-pointer text-sm font-medium flex items-center gap-2">
                   <Mail className="h-4 w-4" />
@@ -265,7 +355,10 @@ export default async function ToolRunPage({
   const region = s(params.region)
   const ask = s(params.ask)
   const context = s(params.context)
-  const submitted = Boolean(charity && description && region && ask)
+  // edit=1 forces the (prefilled) form even when params are present, so
+  // "Edit details" from an error never loses what the user typed.
+  const editMode = s(params.edit) === "1"
+  const submitted = Boolean(charity && description && region && ask) && !editMode
   const input: MatchInput = { charity, description, region, ask, context: context || undefined }
 
   return (
@@ -295,11 +388,11 @@ export default async function ToolRunPage({
               <form action="/tool/run" method="get" className="space-y-5">
                 <div className="space-y-1.5">
                   <Label htmlFor="r-charity">Charity name</Label>
-                  <Input id="r-charity" name="charity" required aria-required="true" placeholder="Your DGR1 organisation" autoComplete="organization" className="h-11" />
+                  <Input id="r-charity" name="charity" required aria-required="true" defaultValue={charity} placeholder="Your DGR1 organisation" autoComplete="organization" className="h-11" />
                 </div>
                 <div className="space-y-1.5">
                   <Label htmlFor="r-description">What does your charity do?</Label>
-                  <Textarea id="r-description" name="description" required aria-required="true" placeholder="We run after-school literacy programs for primary-school kids in Logan, QLD. 1,400 contact hours with 95 students last year. DGR1 endorsed." rows={5} className="min-h-32" />
+                  <Textarea id="r-description" name="description" required aria-required="true" defaultValue={description} placeholder="We run after-school literacy programs for primary-school kids in Logan, QLD. 1,400 contact hours with 95 students last year. DGR1 endorsed." rows={5} className="min-h-32" />
                   <p className="text-xs text-muted-foreground">
                     Two or three sentences. Cause, who you help, recent work. More specific = better match.
                   </p>
@@ -307,20 +400,20 @@ export default async function ToolRunPage({
                 <div className="grid gap-4 sm:grid-cols-2">
                   <div className="space-y-1.5">
                     <Label htmlFor="r-region">Where does your work happen?</Label>
-                    <select id="r-region" name="region" required aria-required="true" defaultValue="australia-wide" className="flex h-11 w-full rounded-md border border-input bg-background text-foreground px-3 py-1 text-sm shadow-sm focus:outline-none focus:ring-2 focus:ring-ring">
+                    <select id="r-region" name="region" required aria-required="true" defaultValue={region || "australia-wide"} className="flex h-11 w-full rounded-md border border-input bg-background text-foreground px-3 py-1 text-sm shadow-sm focus:outline-none focus:ring-2 focus:ring-ring">
                       {regionOptions.map((o) => (<option key={o.value} value={o.value}>{o.label}</option>))}
                     </select>
                   </div>
                   <div className="space-y-1.5">
                     <Label htmlFor="r-ask">How much are you looking for?</Label>
-                    <select id="r-ask" name="ask" required aria-required="true" defaultValue="5k-25k" className="flex h-11 w-full rounded-md border border-input bg-background text-foreground px-3 py-1 text-sm shadow-sm focus:outline-none focus:ring-2 focus:ring-ring">
+                    <select id="r-ask" name="ask" required aria-required="true" defaultValue={ask || "5k-25k"} className="flex h-11 w-full rounded-md border border-input bg-background text-foreground px-3 py-1 text-sm shadow-sm focus:outline-none focus:ring-2 focus:ring-ring">
                       {askOptions.map((o) => (<option key={o.value} value={o.value}>{o.label}</option>))}
                     </select>
                   </div>
                 </div>
                 <div className="space-y-1.5">
                   <Label htmlFor="r-context">Anything else? (optional)</Label>
-                  <Textarea id="r-context" name="context" placeholder="Past funders, recent rejections, why this particular ask matters now." rows={3} className="min-h-24" />
+                  <Textarea id="r-context" name="context" defaultValue={context} placeholder="Past funders, recent rejections, why this particular ask matters now." rows={3} className="min-h-24" />
                 </div>
                 <div className="flex items-start gap-3 rounded-xl border border-accent/40 bg-accent/5 p-4 text-sm leading-relaxed text-muted-foreground">
                   <ShieldAlert className="h-5 w-5 text-accent shrink-0 mt-0.5" />
