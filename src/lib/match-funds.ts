@@ -126,12 +126,19 @@ function prefilterFunds(funds: FundProfile[], region: string): FundProfile[] {
 }
 
 const OPENROUTER_BASE_URL = "https://openrouter.ai/api/v1"
-// Benchmarked 2026-05-16 against gpt-oss-120b, glm-4.5-air, hermes-3-405b,
-// qwen3-next: deepseek-v4-flash was the ONLY free model that returned valid
-// schema-conformant content, with zero hallucinated ABNs and 1M context.
-// The others returned empty content (gpt-oss/glm), provider errors
-// (hermes), or rate-limited (qwen). See scripts/benchmark-models.mjs.
-const MODEL = "deepseek/deepseek-v4-flash:free" as const
+// Free OpenRouter model tiers are individually ephemeral: any one can 502,
+// 429, return empty content, or have its slug churned at any time (observed
+// repeatedly: deepseek-v4-flash 502, gpt-oss empty, hermes provider-error,
+// qwen 429). A single hard-coded model means one provider blip = one burned
+// prospect from a cold DM. So we try a fallback chain in order until one
+// returns valid schema-conformant content. deepseek-v4-flash first
+// (benchmarked best: valid JSON, zero hallucinated ABNs, 1M context); the
+// rest are working fallbacks. Capped so worst-case latency stays bounded.
+const MODEL_CHAIN = [
+  "deepseek/deepseek-v4-flash:free",
+  "z-ai/glm-4.5-air:free",
+  "qwen/qwen3-next-80b-a3b-instruct:free",
+] as const
 
 const SYSTEM_BASE = `You are PatronAtlas, an AI prospect researcher for Australian Deductible Gift Recipient Item 1 (DGR1) charities.
 
@@ -258,12 +265,97 @@ function buildUserPrompt(input: MatchInput, fundsSerialized: string): string {
 }
 
 /**
+ * One attempt against one model. Resolves with matches+usage on a clean,
+ * schema-valid, non-empty response. Throws on ANY failure (non-200,
+ * OpenRouter error field, empty content, unparseable JSON) so the caller
+ * can fall through to the next model in the chain.
+ */
+async function callModelOnce(
+  model: string,
+  apiKey: string,
+  system: string,
+  user: string,
+): Promise<{ matches: FundMatch[]; usage: MatchResult["usage"] }> {
+  const response = await fetch(`${OPENROUTER_BASE_URL}/chat/completions`, {
+    method: "POST",
+    headers: {
+      Authorization: `Bearer ${apiKey}`,
+      "Content-Type": "application/json",
+      "HTTP-Referer": "https://patronatlas.com.au",
+      "X-Title": "PatronAtlas",
+    },
+    body: JSON.stringify({
+      model,
+      messages: [
+        { role: "system", content: system },
+        { role: "user", content: user },
+      ],
+      response_format: { type: "json_schema", json_schema: matchJsonSchema },
+      max_tokens: 4000,
+      temperature: 0.2,
+    }),
+    // Bound per-model latency so a hung provider does not eat the whole
+    // chain budget. ~75s leaves room for 2-3 attempts under typical
+    // Cloudflare invocation limits.
+    signal: AbortSignal.timeout(75_000),
+  })
+
+  if (!response.ok) {
+    const text = await response.text().catch(() => "")
+    throw new Error(`${model} HTTP ${response.status}: ${text.slice(0, 200)}`)
+  }
+
+  const result = (await response.json()) as {
+    choices?: { message?: { content?: string } }[]
+    usage?: { prompt_tokens?: number; completion_tokens?: number; total_tokens?: number }
+    error?: { message?: string }
+  }
+
+  if (result.error) throw new Error(`${model} error: ${result.error.message ?? "unknown"}`)
+
+  const content = result.choices?.[0]?.message?.content
+  if (!content) throw new Error(`${model} returned no content`)
+
+  let data: { matches: FundMatch[] }
+  try {
+    data = JSON.parse(content) as { matches: FundMatch[] }
+  } catch {
+    throw new Error(`${model} returned unparseable JSON`)
+  }
+
+  // Dedup by ABN: free models occasionally repeat a fund. Keep first,
+  // preserve order. Empty result is treated as failure so the chain
+  // falls through rather than showing the user zero matches.
+  const seenAbns = new Set<string>()
+  const deduped: FundMatch[] = []
+  for (const m of data.matches ?? []) {
+    if (!m || typeof m.abn !== "string") continue
+    if (seenAbns.has(m.abn)) continue
+    seenAbns.add(m.abn)
+    deduped.push(m)
+  }
+  if (deduped.length === 0) throw new Error(`${model} returned zero usable matches`)
+
+  return {
+    matches: deduped,
+    usage: {
+      promptTokens: result.usage?.prompt_tokens ?? 0,
+      completionTokens: result.usage?.completion_tokens ?? 0,
+      totalTokens: result.usage?.total_tokens ?? 0,
+      estimatedCostAUD: 0, // all chain models are free tiers
+      model,
+    },
+  }
+}
+
+/**
  * Match an Australian DGR1 charity description against the cached ACNC
  * dataset. Returns up to 10 ranked matches with reasoning, source URLs,
  * and draft outreach emails.
  *
- * Throws if the dataset is empty (run scripts/fetch-acnc.mjs first) or
- * if the OpenRouter API call fails.
+ * Tries MODEL_CHAIN in order; first model that returns valid content wins.
+ * Throws only if the dataset is empty, the key is missing, or every model
+ * in the chain failed (with all errors aggregated for diagnosis).
  */
 export async function matchFunds(input: MatchInput): Promise<MatchResult> {
   const parsed = MatchInputSchema.parse(input)
@@ -275,8 +367,8 @@ export async function matchFunds(input: MatchInput): Promise<MatchResult> {
     )
   }
 
-  // Pre-filter + compact so the prompt context (incl. gpt-oss reasoning
-  // tokens) stays well under the 128K window.
+  // Pre-filter + compact so the prompt context stays well under the
+  // smallest chain model's context window.
   const candidates = prefilterFunds(funds, parsed.region)
   const compact = candidates.map(compactForPrompt)
   const serialized = `<funds count="${compact.length}" total="${funds.length}">${JSON.stringify(compact)}</funds>`
@@ -286,71 +378,21 @@ export async function matchFunds(input: MatchInput): Promise<MatchResult> {
     throw new Error("OPENROUTER_API_KEY is not configured. Set it as a Worker secret.")
   }
 
-  const response = await fetch(`${OPENROUTER_BASE_URL}/chat/completions`, {
-    method: "POST",
-    headers: {
-      Authorization: `Bearer ${apiKey}`,
-      "Content-Type": "application/json",
-      // OpenRouter ranking headers - help track usage on their dashboard
-      "HTTP-Referer": "https://patronatlas.com.au",
-      "X-Title": "PatronAtlas",
-    },
-    body: JSON.stringify({
-      model: MODEL,
-      messages: [
-        { role: "system", content: SYSTEM_BASE },
-        { role: "user", content: buildUserPrompt(parsed, serialized) },
-      ],
-      response_format: {
-        type: "json_schema",
-        json_schema: matchJsonSchema,
-      },
-      max_tokens: 4000,
-      temperature: 0.2,
-    }),
-  })
+  const system = SYSTEM_BASE
+  const user = buildUserPrompt(parsed, serialized)
+  const failures: string[] = []
 
-  if (!response.ok) {
-    const text = await response.text().catch(() => "")
-    throw new Error(`OpenRouter ${response.status}: ${text.slice(0, 500)}`)
+  for (const model of MODEL_CHAIN) {
+    try {
+      const ok = await callModelOnce(model, apiKey, system, user)
+      return ok
+    } catch (err) {
+      failures.push(err instanceof Error ? err.message : String(err))
+      // try the next model in the chain
+    }
   }
 
-  const result = (await response.json()) as {
-    choices?: { message?: { content?: string } }[]
-    usage?: { prompt_tokens?: number; completion_tokens?: number; total_tokens?: number }
-    error?: { message?: string }
-  }
-
-  if (result.error) {
-    throw new Error(`OpenRouter error: ${result.error.message ?? "unknown"}`)
-  }
-
-  const content = result.choices?.[0]?.message?.content
-  if (!content) {
-    throw new Error("OpenRouter returned no content")
-  }
-
-  const data = JSON.parse(content) as { matches: FundMatch[] }
-
-  // Dedup by ABN: free models occasionally repeat a fund (deepseek-v4-flash
-  // returned one dupe in benchmarking). Keep first occurrence, preserve order.
-  const seenAbns = new Set<string>()
-  const deduped: FundMatch[] = []
-  for (const m of data.matches ?? []) {
-    if (!m || typeof m.abn !== "string") continue
-    if (seenAbns.has(m.abn)) continue
-    seenAbns.add(m.abn)
-    deduped.push(m)
-  }
-
-  return {
-    matches: deduped,
-    usage: {
-      promptTokens: result.usage?.prompt_tokens ?? 0,
-      completionTokens: result.usage?.completion_tokens ?? 0,
-      totalTokens: result.usage?.total_tokens ?? 0,
-      estimatedCostAUD: 0, // free model; revisit if MODEL switches to paid
-      model: MODEL,
-    },
-  }
+  throw new Error(
+    `All free models failed. ${failures.join(" | ")}`
+  )
 }
