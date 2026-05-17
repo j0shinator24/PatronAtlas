@@ -173,7 +173,7 @@ Rules.
 
 1. Score each fund on three dimensions: cause fit (do the fund's charitable-purpose subtypes overlap with the charity's stated work), region fit (does the fund's registered state align with the charity's operating region, or do they operate nationally), and scale fit (does the fund's charity size category suggest it could give cheques in the requested ask range).
 
-2. Be candid about confidence. Most matches will be moderate signal because the ACNC subtypes are broad. Say so explicitly in fitReasoning when the only basis is broad subtype overlap. PAFs are typically narrower funders (family-controlled, narrower stated interests) while PuAFs often run open community grant rounds. Note this distinction in your reasoning when relevant.
+2. Be candid about confidence. Most matches will be moderate signal because the ACNC subtypes are broad. Say so explicitly in fitReasoning when the only basis is broad subtype overlap. PAFs are typically narrower funders (family-controlled, narrower stated interests) while PuAFs often run open community grant rounds. Note this distinction in your reasoning when relevant. The category field in each record is AUTHORITATIVE. If a fund's category is "Private Ancillary Fund" you must NOT describe it as public, open to applications, or as running grant rounds; if it is "Public Ancillary Fund" do not call it private. Always state the fund's actual category correctly in fitReasoning and never contradict it.
 
 3. NEVER invent giving history. NEVER claim a fund has given to a specific cause unless that fact is in the dataset (it almost certainly is not). If you don't know, say so.
 
