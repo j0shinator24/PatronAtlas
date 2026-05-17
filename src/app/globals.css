@@ -442,6 +442,16 @@ h1, h2, h3, h4 {
   color: #F5EFE0;
 }
 
+/* The sticky header is UI chrome floating above content, not content
+   itself. The candlelight cast-shadow is for page text depth; on the
+   header wordmark it smears into a doubled/ghosted image. Strip it so
+   the header reads clean over the candlelight. */
+.dark header span,
+.dark header a,
+.dark header p {
+  text-shadow: none;
+}
+
 /* Lit surfaces: warm amber rim light on the top-left edge, long hard
    dark cast bottom-right onto the near-black page. */
 .dark button,
