@@ -121,10 +121,10 @@ export default async function HomePage({
               <span className="text-primary font-display-italic">philanthropic funders.</span>
             </h1>
             <p className="mt-8 text-xl text-foreground/75 leading-relaxed max-w-[60ch]">
-              The complete guide to Australian Private Ancillary Funds costs $2,699 a year.
-              The data underneath comes from the public ACNC, ABR and ASIC registers, where
-              it costs nothing. PatronAtlas reads that data with AI and writes you a shortlist
-              of funders that fit your cause, in about 30 seconds, for ${PRODUCT.paidPriceAnnual} a year.
+              PatronAtlas reads the public ACNC, ABR and ASIC registers with AI and
+              writes you a ranked shortlist of Australian Private and Public Ancillary
+              Funds that fit your cause, every match cited to its source record, in
+              about 30 seconds. Free to use now. A Pro tier is planned.
             </p>
             <div className="mt-10 flex flex-col sm:flex-row gap-4">
               <Link href="/tool/run">
@@ -409,7 +409,7 @@ export default async function HomePage({
               <ul className="space-y-2 text-sm text-muted-foreground leading-relaxed">
                 <li>You&apos;re DGR1 endorsed and looking for trust and foundation income</li>
                 <li>Your prospect research is currently a Google search and an old spreadsheet</li>
-                <li>${PRODUCT.paidPriceAnnual} a year is the right order of magnitude for you, not $2,000+</li>
+                <li>Free now, low-cost Pro later, is the right scale for you, not an enterprise data contract</li>
                 <li>You want the AI to read the public data and write you a shortlist</li>
               </ul>
             </div>
