@@ -309,6 +309,44 @@ h1, h2, h3, h4 {
 .stack-lg { --stack-space: 2rem; }
 .stack-xl { --stack-space: 3rem; }
 
+/* ===== Tool loading indicator =====
+   Indeterminate sweep + drastic Waylight-palette colour cycle so the
+   wait reads unmistakably as active loading. Pure CSS so it runs in
+   JS-restricted in-app webviews. Explicit hex (not var tokens) because
+   in dark mode --primary and --accent are the same amber, which would
+   give no contrast; these four are distinct on both ivory and black. */
+@keyframes loading-sweep {
+  0%   { transform: translateX(-115%); }
+  100% { transform: translateX(420%); }
+}
+@keyframes loading-hue {
+  0%, 100% { background-color: #1F6F6F; } /* teal */
+  25%      { background-color: #B8924A; } /* gold */
+  50%      { background-color: #FFC661; } /* bright amber */
+  75%      { background-color: #3A8E8E; } /* teal-light */
+}
+@keyframes star-spin { to { transform: rotate(360deg); } }
+@keyframes star-hue {
+  0%, 100% { color: #1F6F6F; }
+  25%      { color: #B8924A; }
+  50%      { color: #FFC661; }
+  75%      { color: #3A8E8E; }
+}
+.loading-bar {
+  animation:
+    loading-sweep 1.5s cubic-bezier(.4, 0, .2, 1) infinite,
+    loading-hue 2.4s linear infinite;
+}
+.animate-star {
+  animation:
+    star-spin 2.2s linear infinite,
+    star-hue 2.4s linear infinite;
+}
+@media (prefers-reduced-motion: reduce) {
+  .loading-bar,
+  .animate-star { animation: none; }
+}
+
 /* ===== Warm Candlelight System (PatronAtlas, sister to waylight.com.au) =====
    Ported warm from the Waylight site without modification. In light mode
    the logo carries a faint warm halo. In dark mode the logo becomes a

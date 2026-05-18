@@ -316,12 +316,12 @@ function ResultsSkeleton() {
       <div className="mx-auto max-w-4xl px-4 md:px-8">
         <div className="rounded-2xl border-2 border-primary bg-primary/10 p-6 mb-8 shadow-sm">
           <p className="text-lg md:text-xl font-bold mb-2 flex items-center gap-2 text-foreground">
-            <Sparkles className="h-6 w-6 text-primary animate-pulse shrink-0" />
+            <Sparkles className="h-6 w-6 text-primary shrink-0 animate-star" />
             Working on it. This takes up to about two minutes.
           </p>
           {/* CSS-only indeterminate progress bar (no JS; works in JS-restricted webviews) */}
-          <div className="h-2 w-full rounded-full bg-primary/20 overflow-hidden my-4" aria-hidden="true">
-            <div className="h-full w-1/3 rounded-full bg-primary animate-pulse" />
+          <div className="h-2.5 w-full rounded-full bg-primary/15 overflow-hidden my-4" aria-hidden="true">
+            <div className="h-full w-1/3 rounded-full bg-primary loading-bar" />
           </div>
           <p className="text-base font-bold text-primary leading-relaxed">
             Do not refresh, do not press back, do not close this tab.

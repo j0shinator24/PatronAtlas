@@ -328,10 +328,16 @@ async function callModelOnce(
       max_tokens: 4000,
       temperature: 0.2,
     }),
-    // Bound per-model latency so a hung provider does not eat the whole
-    // chain budget. ~75s leaves room for 2-3 attempts under typical
-    // Cloudflare invocation limits.
-    signal: AbortSignal.timeout(75_000),
+    // Bound per-model latency so a genuinely hung provider does not
+    // hang forever. The chain is now 2 links and the free model 429s
+    // in ~1-2s, so nearly the whole budget is available for the paid
+    // call, which legitimately needs ~60-100s to read the ~30k-token
+    // fund list and emit ~4k tokens of structured JSON. 75s was killing
+    // valid slow responses (intermittent "operation aborted due to
+    // timeout"); 110s matches the "up to about two minutes" the UI
+    // promises and the streaming shell already holds open. Workers
+    // count fetch wait as I/O not CPU, so a long await is safe here.
+    signal: AbortSignal.timeout(110_000),
   })
 
   if (!response.ok) {
