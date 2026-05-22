@@ -438,6 +438,18 @@ function attachContacts(
 }
 
 /**
+ * Optional caller overrides. Added in Evening 1 of the API-layer build so
+ * tests and a future API-tier route handler can pass an explicit key
+ * (different billing account, scoped sub-key, etc.) without going through
+ * process.env. Production callers (the /tool/run page) keep calling
+ * matchFunds(input) with no opts and inherit the worker secret.
+ */
+export type MatchOptions = {
+  /** OpenRouter API key override. Falls back to process.env.OPENROUTER_API_KEY. */
+  openrouterKey?: string
+}
+
+/**
  * Match an Australian DGR1 charity description against the cached ACNC
  * dataset. Returns up to 10 ranked matches with reasoning, source URLs,
  * and draft outreach emails.
@@ -446,7 +458,10 @@ function attachContacts(
  * Throws only if the dataset is empty, the key is missing, or every model
  * in the chain failed (with all errors aggregated for diagnosis).
  */
-export async function matchFunds(input: MatchInput): Promise<MatchResult> {
+export async function matchFunds(
+  input: MatchInput,
+  opts?: MatchOptions,
+): Promise<MatchResult> {
   const parsed = MatchInputSchema.parse(input)
   const { funds } = loadFunds()
 
@@ -466,7 +481,8 @@ export async function matchFunds(input: MatchInput): Promise<MatchResult> {
   const user = buildUserPrompt(parsed, serialized)
   const failures: string[] = []
 
-  const orKey = process.env.OPENROUTER_API_KEY
+  // opts.openrouterKey overrides the worker secret for the API tier + tests.
+  const orKey = opts?.openrouterKey ?? process.env.OPENROUTER_API_KEY
   if (!orKey) {
     throw new Error("OPENROUTER_API_KEY is not configured. Set it as a Worker secret.")
   }
