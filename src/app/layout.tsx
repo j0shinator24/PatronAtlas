@@ -114,6 +114,15 @@ export default function RootLayout({
   return (
     <html lang="en" className={`${fraunces.variable} ${dmSans.variable} ${geistMono.variable} ${caveat.variable} h-full antialiased`} suppressHydrationWarning>
       <body className="min-h-full flex flex-col font-sans">
+        {/*
+          opennextjs-cloudflare + Next 16 ships bundles that reference esbuild's
+          keepNames helper `__name` without including the helper itself, so any
+          inline script that uses it (next-themes' theme-setter, supabase-js
+          chunks, etc.) crashes with "ReferenceError: __name is not defined" the
+          moment it runs. This shim has to be the very first thing in <body> so
+          it defines the global before any of those scripts hit it.
+        */}
+        <script dangerouslySetInnerHTML={{ __html: "globalThis.__name=globalThis.__name||function(f){return f};" }} />
         <div className="candlelight-ambient" aria-hidden="true" />
         <script
           type="application/ld+json"
