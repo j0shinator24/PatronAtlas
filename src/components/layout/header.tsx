@@ -15,7 +15,6 @@ import { ThemeToggle } from "@/components/theme-toggle"
 // WCAG 2.1.1 (Keyboard), 2.4.3 (Focus Order), 4.1.2 (Name, Role, Value).
 
 const navItems = [
-  { href: "/tool/run", label: "Try the tool" },
   { href: "/#product", label: "Product" },
   { href: "/developers", label: "Developers" },
   { href: "/#pricing", label: "Pricing" },
