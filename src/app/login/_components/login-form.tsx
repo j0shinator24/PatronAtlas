@@ -1,6 +1,6 @@
 "use client"
 
-import { useState, useEffect, use } from "react"
+import { useState } from "react"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
@@ -13,48 +13,48 @@ type Status =
   | { kind: "sent"; email: string }
   | { kind: "error"; message: string }
 
-// `next` is the dashboard path to land on after the user clicks the email link.
-// Defaults to /dashboard/api-keys.
-function readNext(params: Record<string, string | string[] | undefined>): string {
-  const raw = typeof params.next === "string" ? params.next : ""
-  // Only allow relative paths beginning with "/" so we cannot be tricked into
-  // bouncing the user to an external phishing site after sign-in.
-  if (raw.startsWith("/") && !raw.startsWith("//")) return raw
-  return "/dashboard/api-keys"
-}
-
+/**
+ * Magic-link sign-in form. `next` is resolved server-side and passed in as
+ * a plain string so this client component does not need to await any
+ * Promises -- avoids a pattern that was preventing hydration in the
+ * Next 16 + opennextjs-cloudflare bundle.
+ */
 export function LoginForm({
-  searchParams,
+  next,
+  initialError,
 }: {
-  searchParams: Promise<Record<string, string | string[] | undefined>>
+  next: string
+  initialError: string | null
 }) {
-  // Resolve the Promise via React's `use` hook so the parent server component
-  // can stream the page shell immediately.
-  const params = use(searchParams)
-  const [next, setNext] = useState("/dashboard/api-keys")
   const [email, setEmail] = useState("")
-  const [status, setStatus] = useState<Status>({ kind: "idle" })
-
-  useEffect(() => {
-    setNext(readNext(params))
-  }, [params])
+  const [status, setStatus] = useState<Status>(
+    initialError ? { kind: "error", message: initialError } : { kind: "idle" },
+  )
 
   async function onSubmit(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault()
     setStatus({ kind: "sending" })
-    const supabase = createBrowserSupabase()
-    const { error } = await supabase.auth.signInWithOtp({
-      email: email.trim(),
-      options: {
-        emailRedirectTo: `${window.location.origin}/auth/callback?next=${encodeURIComponent(next)}`,
-        shouldCreateUser: true,
-      },
-    })
-    if (error) {
-      setStatus({ kind: "error", message: error.message })
-      return
+    try {
+      const supabase = createBrowserSupabase()
+      const { error } = await supabase.auth.signInWithOtp({
+        email: email.trim(),
+        options: {
+          emailRedirectTo: `${window.location.origin}/auth/callback?next=${encodeURIComponent(next)}`,
+          shouldCreateUser: true,
+        },
+      })
+      if (error) {
+        setStatus({ kind: "error", message: error.message })
+        return
+      }
+      setStatus({ kind: "sent", email: email.trim() })
+    } catch (err) {
+      // Always surface SOMETHING to the user. Silent rejections were the
+      // original "Sending..." forever bug -- if signInWithOtp throws (network
+      // blocked, env mis-config, CORS) we want it on screen, not in the void.
+      const message = err instanceof Error ? err.message : String(err)
+      setStatus({ kind: "error", message })
     }
-    setStatus({ kind: "sent", email: email.trim() })
   }
 
   if (status.kind === "sent") {
