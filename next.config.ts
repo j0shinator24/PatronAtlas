@@ -28,7 +28,20 @@ const securityHeaders = [
   },
   {
     key: "Content-Security-Policy",
-    value: "default-src 'self'; script-src 'self' 'unsafe-inline' 'unsafe-eval'; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob:; font-src 'self' data:; frame-ancestors 'none'; base-uri 'self'; form-action 'self'",
+    // connect-src must whitelist every cross-origin endpoint the browser bundle
+    // talks to. Without it, `default-src 'self'` blocks fetch/XHR/WebSocket to
+    // anything off-domain and silently breaks signInWithOtp on /login (browser
+    // surfaces "Failed to fetch" with no other detail).
+    value:
+      "default-src 'self'; " +
+      "script-src 'self' 'unsafe-inline' 'unsafe-eval'; " +
+      "style-src 'self' 'unsafe-inline'; " +
+      "img-src 'self' data: blob:; " +
+      "font-src 'self' data:; " +
+      "connect-src 'self' https://*.supabase.co wss://*.supabase.co; " +
+      "frame-ancestors 'none'; " +
+      "base-uri 'self'; " +
+      "form-action 'self'",
   },
 ];
 
