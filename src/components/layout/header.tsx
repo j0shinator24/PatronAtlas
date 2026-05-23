@@ -80,6 +80,9 @@ export function Header() {
               {item.label}
             </Link>
           ))}
+          <Link href="/login" className="nav-link" aria-label="Sign in">
+            Sign in
+          </Link>
           <div className="relative ml-2">
             <ThemeToggle />
             <span className="light-hint absolute -bottom-7 left-1/2 -translate-x-1/2 font-handwritten text-2xl text-muted-foreground/60 -rotate-3 whitespace-nowrap pointer-events-none select-none">
@@ -121,6 +124,14 @@ export function Header() {
                     </Link>
                   </li>
                 ))}
+                <li>
+                  <Link
+                    href="/login"
+                    className="block px-4 py-3 text-base font-medium rounded-md transition-colors text-muted-foreground hover:text-foreground hover:bg-muted"
+                  >
+                    Sign in
+                  </Link>
+                </li>
                 <li className="pt-2">
                   <Link href="/tool/run">
                     <Button variant="default" className="w-full">
